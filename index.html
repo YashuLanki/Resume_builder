@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Build Your Resume</title>
+<link rel="stylesheet" href="style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="mobile-toggle">
+  <button id="mt-edit" class="active" onclick="setMobileView('form')">Edit</button>
+  <button id="mt-prev" onclick="setMobileView('preview')">Preview</button>
+</div>
+
+<div class="shell">
+  <div class="panel-form" id="panel-form">
+    <div style="text-align:center;padding:16px 0 4px;"><img src="assets/logo.png" alt="Arizona Marshallese Community" style="width:72px;height:auto;display:inline-block;opacity:0.9;"></div>
+    <div class="brandbar">
+      <div class="brandbar-text">
+        <h1>Build your resume</h1>
+        <p id="brandbar-hint">Complete each tab in order: Personal Info → Experience → Education → Skills → Summary. This builds your PDF correctly. Download it on the last tab.</p>
+      </div>
+      <button id="lang-toggle" onclick="toggleLang()">🇲🇭 Translate to Marshallese</button>
+    </div>
+    <div class="steps">
+      <button class="step-btn active" data-step="personal" onclick="goStep('personal')"><span class="num">1</span>Personal Info</button>
+      <button class="step-btn" data-step="experience" onclick="goStep('experience')"><span class="num">2</span>Experience</button>
+      <button class="step-btn" data-step="education" onclick="goStep('education')"><span class="num">3</span>Education</button>
+      <button class="step-btn" data-step="skills" onclick="goStep('skills')"><span class="num">4</span>Skills</button>
+      <button class="step-btn" data-step="statement" onclick="goStep('statement')"><span class="num">5</span>Summary</button>
+    </div>
+    <div class="form-scroll" id="form-scroll"></div>
+  </div>
+
+  <div class="panel-preview" id="panel-preview">
+    <div class="preview-toolbar">
+      <h2>Live preview</h2>
+      <span class="fit-note" id="fit-note">Checking page fit…</span>
+    </div>
+    <div class="rotate-prompt">
+      <svg viewBox="0 0 64 64" width="40" height="40" fill="none">
+        <rect x="22" y="6" width="20" height="36" rx="3" stroke="currentColor" stroke-width="2.5"/>
+        <circle cx="32" cy="40" r="1.4" fill="currentColor"/>
+        <path d="M46 16 A18 18 0 0 1 49 33" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M49 27 L49 33 L43 32" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <strong>Turn your phone sideways</strong>
+        <div>for a bigger view of your resume</div>
+      </div>
+    </div>
+    <div class="page-wrap">
+      <div id="resume-page"></div>
+    </div>
+  </div>
+</div>
+
+
+<script src="script.js"></script>
+</body>
+</html>
