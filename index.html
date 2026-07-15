@@ -21,7 +21,7 @@
     <div class="brandbar">
       <div class="brandbar-text">
         <h1>Build your resume</h1>
-        <p id="brandbar-hint">Complete each tab in order: Personal Info → Experience → Education → Skills → Summary. This builds your PDF correctly. Download it on the last tab.</p>
+        <p id="brandbar-hint">Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.</p>
       </div>
       <button id="lang-toggle" onclick="toggleLang()">🇲🇭 Translate to Marshallese</button>
     </div>
@@ -59,6 +59,12 @@
 </div>
 
 
-<script src="script.js"></script>
+<script src="script.js?v=3"></script>
+<div id="ios-save-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:14px;max-width:340px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <h3 id="ios-save-title" style="margin:0 0 14px;color:#16233D;font-size:17px;">Your resume is ready!</h3>
+    <button id="ios-save-close-btn" style="border:none;background:#B68D40;color:#fff;font-size:15px;font-weight:700;padding:12px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeSaveInstructions()">Got it</button>
+  </div>
+</div>
 </body>
 </html>
