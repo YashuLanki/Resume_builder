@@ -6,7 +6,7 @@ const MH = {
   expHint: "Likit jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj makke kwalok jerbal eo ekaal mokta ekkar ñan iio.",
   alreadyCopied: "(Em\u014dj an copy - kajju paste w\u014dt ilo ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
-  privacyNote: "Disclaimer: Melele kein am rej walok ilo browser in w\u014dt, im rejjab kejbarok ak jilkin\u1e37\u1ecdk \u00f1an jabdew\u014dt jikin.",
+  privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
 };
 const EN = {
   brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
