@@ -2,14 +2,16 @@
 let lang = 'en'; // 'en' = English (default), 'mh' = Marshallese
 
 const MH = {
-  brandbarHint: "Kadedelok kajjojo tab ko ilo laajrak: Personal Info \u2192 Experience \u2192 Education \u2192 Skills \u2192 Summary. Menin ej k\u014dmman PDF eo am ilo jimwe. B\u014dk e ilo tab eo eliktata.",
-  expHint: "Kobaik jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj kwalok jerbal eo ekaal mokta, ekkar \u00f1an raan jerbal ko kwoj likiti.",
-  alreadyCopied: "(Em\u014dj an copy - kajju paste w\u014dt ilo ChatGPT)"
+  brandbarHint: "Kanne tab 1-5. Bōk PDF eo am ilo tab eo eliktata. Resume in ej limit i yuk ñan 1 peij wōt.",
+  expHint: "Likit jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj makke kwalok jerbal eo ekaal mokta ekkar ñan iio.",
+  alreadyCopied: "(Em\u014dj an copy - kajju paste w\u014dt ilo ChatGPT)",
+  iosSaveTitle: "Your resume is ready!",
 };
 const EN = {
-  brandbarHint: "Complete each tab in order: Personal Info \u2192 Experience \u2192 Education \u2192 Skills \u2192 Summary. This builds your PDF correctly. Download it on the last tab.",
-  expHint: "Add jobs in any order \u2014 your resume will automatically show the most recent job first, based on the dates you enter.",
-  alreadyCopied: "(Already copied \u2014 just paste it in ChatGPT)"
+  brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
+  expHint: "Add up to 3 jobs in any order. Your resume will automatically list the most recent first.",
+  alreadyCopied: "(Already copied \u2014 just paste it in ChatGPT)",
+  iosSaveTitle: "Your resume is ready!",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
@@ -50,7 +52,7 @@ function newExp(){
   return { id: Math.random().toString(36).slice(2), title:"", company:"", city:"", state:"", startMonth:"", startYear:"", endMonth:"", endYear:"", current:false, notes:"", bullets:[""] };
 }
 function newEdu(){
-  return { id: Math.random().toString(36).slice(2), degreeType:"", program:"", school:"", city:"", state:"", startMonth:"", startYear:"", endMonth:"", endYear:"", current:false, detail:"" };
+  return { id: Math.random().toString(36).slice(2), degreeType:"", program:"", school:"", city:"", state:"", startMonth:"", startYear:"", endMonth:"", endYear:"", current:false, gradYear:"", detail:"" };
 }
 
 /* ---------------- Degree levels, months, and years for dropdowns ---------------- */
@@ -270,20 +272,19 @@ function experienceHTML(){
       </div>
     </div>`;
   });
-  html += `<button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addExp()">+ Add another job</button>`;
-  return html;
-}
-
+  if(exps.length < 3) {
+    html += `<button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addExp()">+ Add another job</button>`;
+  }return html;}
 function statementHTML(){
   return `
   <div style="margin-bottom:12px;">
     <strong style="font-size:13px;color:var(--navy);">Professional summary</strong>
     <div class="hint" style="margin-top:4px;line-height:1.6;">
       ${lang==='mh' ? `
-        Menin ej kōmmone paragraph eo jinoin ilo resume in am. Enin ej step ko kwoj aikuj kōmmane:<br>
+        Section in ej ñan paragraph eo jinoin ilo resume in am. Loor e step kein jilu:<br>
         1. Jibidre <strong>Step 1</strong> – emoj an copy aolep information ko ñan kwe.<br>
-        2. Etal ñan ChatGPT, jibed message box eo, im paste (emoj an nakke copy, kajju paste wōt).<br>
-        3. Copy ta eo ChatGPT ej lewaj likiti ilo box new itulal, innem jibidre <strong>Step 2</strong>.
+        2. Etal ñan ChatGPT, jibed message box eo, im paste (emoj an makke copy, kajju paste wōt).<br>
+        3. Copy ta eo ChatGPT ej lewaj likiti ilo box ne itulal, innem jibidre <strong>Step 2</strong>.
       ` : `
         This creates the introduction paragraph at the top of your resume. Here's what to do:
         <div style='margin-top:6px;padding-left:4px;'>
@@ -308,7 +309,7 @@ function statementHTML(){
 function educationHTML(){
   const edus = data.education;
   let html = `<div style="margin-bottom:8px;"><strong style="font-size:13px;color:var(--navy);">Education</strong>
-    <div class="hint" style="margin-top:2px;">${lang==='mh' ? 'Menin ej walok elikin jerbal ko am ilo resume eo am. Jolok elañe kwojjab kōnan likiti.' : 'This appears after Work Experience on your resume. Leave it out entirely if you\'d rather not include it — just remove all entries.'}</div></div>`;
+    <div class="hint" style="margin-top:2px;">${lang==='mh' ? 'Section in enij walok elikin jerbal ko am ilo resume in. Jolok elañe kwojjab kōnan likiti.' : 'This section is optional. Delete all entries to remove it from your resume.'}</div></div>`;
   edus.forEach((ed,i)=>{
     const level = eduLevelFromType(ed.degreeType);
     const hasDegree = ed.degreeType || ed.school;
@@ -358,6 +359,12 @@ function educationHTML(){
         <label style="font-size:12px;display:flex;gap:6px;align-items:center;margin-bottom:10px;color:var(--navy);font-weight:600;">
           <input type="checkbox" ${ed.current?'checked':''} onchange="toggleEduCurrent(${i}, this.checked)" style="width:auto;"> Currently enrolled
         </label>
+        ${ed.current ? `
+        <div class="field">
+          <label>Expected graduation year</label>
+          <select onchange="updEdu(${i},'gradYear',this.value)">${yearOptionsHTML(ed.gradYear)}</select>
+        </div>
+        ` : ""}
         <div class="field">
           <label>Optional detail line</label>
           <input type="text" value="${esc(ed.detail)}" oninput="updEdu(${i},'detail',this.value)" placeholder="Relevant coursework, honors, GPA, etc.">
@@ -458,8 +465,8 @@ function buildGptPrompt(exp){
   const title = (exp.title||"").trim();
   const company = (exp.company||"").trim();
   const what = (exp.notes||"").trim();
-  let p = "Rewrite the following work experience as exactly 5 professional, resume-ready bullet points. ";
-  p += "Use strong action verbs, vary them across bullets, keep each one to a single line, and add a realistic number or result where it makes sense. ";
+  let p = "Rewrite the following work experience as exactly 3 professional, resume-ready bullet points. ";
+  p += "Use strong action verbs, vary them across bullets, keep each one to a single line, and add a realistic number or result where it makes sense if necessary. ";
   p += "Return them as a plain list with no markdown formatting — no asterisks, bold, or italics, just plain text.\n\n";
   p += `Job title: ${title || "(not given)"}\n`;
   if(company) p += `Company: ${company}\n`;
@@ -472,11 +479,11 @@ function gptPanelHTML(i){
   return `
   <div class="guided-panel" style="margin-top:12px;">
     <textarea id="gpt-prompt-${i}" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">${esc(prompt)}</textarea>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Click here to open ChatGPT</label>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 2: Click here to open ChatGPT</button>
-    <div class="hint" id="gpt-status-${i}" style="margin-top:6px;font-size:12.5px;">${mh('alreadyCopied')}</div>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste & generate</label>
-    <textarea id="gpt-paste-${i}" style="margin-bottom:6px;" placeholder="${pastePlaceholder(3)}"></textarea>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Paste in ChatGPT</label>
+    <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}\n</div>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 2: Click here to paste in ChatGPT</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Generate</label>
+    <textarea id="gpt-paste-${i}" style="margin-bottom:10px;" placeholder="${pastePlaceholder(3)}"></textarea>
     <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Click here to generate bullet points</button>
   </div>`;
 }
@@ -516,7 +523,8 @@ function buildSkillsGptPrompt(){
   p += "Languages: <comma-separated languages, or None>\n";
   p += "Certifications: <comma-separated certifications, or None>\n";
   p += "Other skills:\n";
-  p += "- <skill 1>\n- <skill 2>\n- <skill 3>\n(one per line, each a short clear phrase rather than a single word — don't combine them into one sentence)\n\n";
+  p += "- <skill 1> | <skill 2> | <skill 3> | <skill 4> | <skill 5> | <additional skills if applicable>\n";
+  p += "(Use a single bullet point. Separate each skill with a | character. Include at least 5 skills. If the user provides fewer than 5, infer additional relevant professional skills that most employer look for. Do not invent certifications, languages, or technical skills that are not supported by the provided information.)\n\n";
   p += `Languages: ${langStr || "(none provided)"}\n`;
   p += `Certifications: ${certs || "(none provided)"}\n`;
   p += `Other skills: ${others || "(none provided)"}`;
@@ -527,10 +535,10 @@ function skillsGptPanelHTML(){
   return `
   <div class="guided-panel" style="margin-top:12px;">
     <textarea id="skills-gpt-prompt" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">${esc(prompt)}</textarea>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Click here to open ChatGPT</label>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 2: Click here to open ChatGPT</button>
-    <div class="hint" id="skills-gpt-status" style="margin-top:6px;font-size:12.5px;">${mh('alreadyCopied')}</div>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste & update</label>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Paste in ChatGPT</label>
+    <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}</div>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 2: Click here to paste ChatGPT</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Generate</label>
     <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(3)}"></textarea>
     <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 3: Click here to update my skills</button>
     ${skillsDone ? `
@@ -690,6 +698,7 @@ function insertGptBullets(i){
 }
 
 function addExp(){
+  if(data.experiences.length >= 3) return;
   const newIdx = data.experiences.length;
   data.experiences.push(newExp());
   expandedJobs.add(newIdx);
@@ -770,11 +779,12 @@ function toggleStatementGpt(){
 }
 function buildStatementGptPrompt(d){
   const exps = sortedExperiences(d);
-  let p = "Write a professional resume summary statement, exactly 4 sentences. ";
+  let p = "Write a professional resume summary statement, exactly 3 sentences. ";
+  p += "Keep the total length short enough to fit on about 3 lines of a resume page — roughly 50-55 words total, so keep each sentence concise. ";
   p += "Use the standard implied-subject style of a resume summary — do NOT start sentences with \"The candidate\", \"I\", \"He\", \"She\", or any repeated subject. ";
   p += "Start sentences directly with a strong adjective, job title, or action, the way a polished resume bullet reads, and vary the sentence openers so they don't all sound the same. ";
   p += "Weave in the work experience, skills, and education below where relevant. ";
-  p += "Return only the 4 sentences as plain text — no markdown, no headers, no bullet points.\n\n";
+  p += "Return only the 3 sentences as plain text — no markdown, no headers, no bullet points.\n\n"
   p += "Work experience (most recent first):\n";
   if(exps.length){
     exps.forEach(e=>{
@@ -804,18 +814,18 @@ function statementGptPanelHTML(){
   return `
   <div class="guided-panel">
     <textarea id="statement-gpt-prompt" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">${esc(prompt)}</textarea>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Click here to open ChatGPT</button>
-    <div class="hint" id="statement-gpt-status" style="margin-top:6px;font-size:12.5px;">${mh('alreadyCopied')}</div>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Paste in ChatGPT</label>
+    <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}</div>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Click here to paste in ChatGPT</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
+    <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(2)}"></textarea>
+    <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 2: Click here update Summary</button>
     ${data.statementEdited ? `
     <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;text-align:center;">
       <strong style="font-size:14px;color:var(--ok);">✓ DONE!</strong>
       <div style="font-size:12px;color:var(--ok);margin-top:4px;">Tap <strong>Preview</strong> at the top to see your finished resume.</div>
     </div>
-    ` : `
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Paste here</label>
-    <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(2)}"></textarea>
-    <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 2: Click here</button>
-    `}
+    ` : ""}
   </div>`;
 }
 function openAndCopyStatementGpt(){
@@ -987,7 +997,7 @@ function buildResumeHTML(opts){
   if(edus.length){
     html += `<div class="rsection"><h3>Education</h3>`;
     edus.forEach(ed=>{
-      const dates = [formatDatePair(ed.startMonth,ed.startYear), ed.current ? "Anticipated" : formatDatePair(ed.endMonth,ed.endYear)].filter(Boolean).join(" – ");
+      const dates = [formatDatePair(ed.startMonth,ed.startYear), ed.current ? `Anticipated ${ed.gradYear || ""}`.trim() : formatDatePair(ed.endMonth,ed.endYear)].filter(Boolean).join(" – ");
       const cityState = [ed.city, ed.state].filter(Boolean).join(", ");
       html += `<div class="rjob">
         <div class="rjob-top"><span>${esc(eduDisplayDegree(ed))||"Degree"}</span><span>${esc(dates)}</span></div>
@@ -1107,9 +1117,13 @@ async function downloadPDF(){
   const original = btn.textContent;
   btn.textContent = "Preparing PDF…";
   btn.disabled = true;
+
+  const previewPanel = document.getElementById("panel-preview");
+  const wasHidden = previewPanel.classList.contains("hidden-mobile");
+  if(wasHidden) previewPanel.classList.remove("hidden-mobile");
+
   try{
     const node = document.getElementById("resume-page");
-    // Remove transform so html2canvas captures at native size
     node.style.transform = "none";
     node.style.marginBottom = "0";
     await new Promise(r=>setTimeout(r,100));
@@ -1123,14 +1137,12 @@ async function downloadPDF(){
     node.style.marginBottom = "";
     fitPageWrap();
 
-    // Convert canvas pixels → inches (canvas is rendered at 96dpi × scale:2 = 192dpi)
     const DPI = 192;
     const canvasInW = canvas.width  / DPI;
     const canvasInH = canvas.height / DPI;
     const pageW = 8.5;
     const pageH = 11;
 
-    // Scale to fit within the letter page while keeping aspect ratio
     const scale = Math.min(pageW / canvasInW, pageH / canvasInH);
     const finalW = Math.round(canvasInW * scale * 1000) / 1000;
     const finalH = Math.round(canvasInH * scale * 1000) / 1000;
@@ -1141,14 +1153,38 @@ async function downloadPDF(){
     const pdf = new jsPDF({ unit:"in", format:"letter" });
     pdf.addImage(imgData, "JPEG", xOff, 0, finalW, finalH);
     const filename = (data.name.trim().replace(/\s+/g,"_") || "resume") + "_Resume.pdf";
-    pdf.save(filename);
+
+    // Show the save instructions FIRST, no matter what — this guarantees
+    // every user sees it, even if the automatic download attempt below
+    // fails or throws on their particular browser.
+    const blobUrl = URL.createObjectURL(pdf.output('blob'));
+    showSaveInstructions(blobUrl, filename);
+
+    // Now attempt the normal automatic download as a bonus. Wrapped in its
+    // own try/catch so if it fails (as it does on Safari), it fails quietly
+    // and doesn't interrupt anything — the popup above already has them covered.
+    try{
+      pdf.save(filename);
+    } catch(downloadErr){
+      console.error("Automatic download failed, relying on manual link instead:", downloadErr);
+    }
+
   } catch(err){
-    alert("Download hit a snag. You can also press Ctrl/Cmd+P and choose 'Save as PDF' as a backup.");
+    alert("Download hit a snag: " + err.message + "\n\nYou can also press Ctrl/Cmd+P and choose 'Save as PDF' as a backup.");
     console.error(err);
   } finally {
+    if(wasHidden) previewPanel.classList.add("hidden-mobile");
     btn.textContent = original;
     btn.disabled = false;
   }
+}
+
+function showSaveInstructions(blobUrl, filename){
+  document.getElementById("ios-save-title").textContent = mh('iosSaveTitle');
+  document.getElementById("ios-save-overlay").style.display = "flex";
+}
+function closeSaveInstructions(){
+  document.getElementById("ios-save-overlay").style.display = "none";
 }
 
 /* ---------------- INIT ---------------- */
