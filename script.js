@@ -6,14 +6,14 @@ const MH = {
   expHint: "Likit jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj makke kwalok jerbal eo ekaal mokta ekkar ñan iio.",
   alreadyCopied: "(Em\u014dj an copy - kajju paste w\u014dt ilo ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
-  privacyNote: "\ud83d\udd12 Melele kein am rejjab kejbarok, kadedelok, ak jilkin\u1e37\u1ecdk \u00f1an jabdew\u014dt jikin \u2014 aolep men in rej wa lok ilo browser eo am w\u014dt, im k\u014djerbal w\u014dt \u00f1an k\u014dmman resume in am.",
+  privacyNote: "Disclaimer: Melele kein am rej walok ilo browser in w\u014dt, im rejjab kejbarok ak jilkin\u1e37\u1ecdk \u00f1an jabdew\u014dt jikin.",
 };
 const EN = {
   brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
   expHint: "Add up to 3 jobs in any order. Your resume will automatically list the most recent first.",
   alreadyCopied: "(Already copied \u2014 just paste it in ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
-  privacyNote: "\ud83d\udd12 Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
+  privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
