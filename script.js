@@ -2,16 +2,18 @@
 let lang = 'en'; // 'en' = English (default), 'mh' = Marshallese
 
 const MH = {
-  brandbarHint: "Kanne tab 1-5. Bōk PDF eo am ilo tab eo eliktata. Resume in ej limit i yuk ñan 1 peij wōt.",
+  brandbarHint: "Kanne tab 1-5. Bōk e PDF eo am ilo tab eo eliktata. Resume in ej limit i yuk ñan 1 wōt peij.",
   expHint: "Likit jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj makke kwalok jerbal eo ekaal mokta ekkar ñan iio.",
   alreadyCopied: "(Em\u014dj an copy - kajju paste w\u014dt ilo ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
+  privacyNote: "\ud83d\udd12 Melele kein am rejjab kejbarok, kadedelok, ak jilkin\u1e37\u1ecdk \u00f1an jabdew\u014dt jikin \u2014 aolep men in rej wa lok ilo browser eo am w\u014dt, im k\u014djerbal w\u014dt \u00f1an k\u014dmman resume in am.",
 };
 const EN = {
   brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
   expHint: "Add up to 3 jobs in any order. Your resume will automatically list the most recent first.",
   alreadyCopied: "(Already copied \u2014 just paste it in ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
+  privacyNote: "\ud83d\udd12 Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
@@ -27,6 +29,8 @@ function toggleLang(){
   // Update the three swappable strings without a full re-render
   const bh = document.getElementById('brandbar-hint');
   if(bh) bh.textContent = mh('brandbarHint');
+  const pn = document.getElementById('privacy-note');
+  if(pn) pn.textContent = mh('privacyNote');
   // Re-render the form so experience hint and hint divs pick up the new lang
   renderForm();
 }
@@ -143,6 +147,32 @@ function formatDatePair(month, year){
   return month || year || "";
 }
 
+/* ---------------- STEP COMPLETION ---------------- */
+const STEP_NUMERALS = { personal:"1", experience:"2", education:"3", skills:"4", statement:"5" };
+function stepComplete(step){
+  if(step==="personal") return !!(data.name && data.city && data.state && data.email && data.phone);
+  if(step==="experience") return data.experiences.some(e=> e.title && e.company && e.bullets.some(b=>b.trim()));
+  if(step==="education") return data.education.some(ed=> ed.degreeType && ed.school);
+  if(step==="skills"){
+    return skillsDone
+      || data.languages.some(l=>l.trim())
+      || data.certifications.some(c=>c.trim())
+      || data.otherSkills.some(s=>s.trim());
+  }
+  if(step==="statement") return !!data.statementEdited;
+  return false;
+}
+function updateStepChecks(){
+  document.querySelectorAll(".step-btn").forEach(btn=>{
+    const step = btn.dataset.step;
+    const numEl = btn.querySelector(".num");
+    if(!numEl) return;
+    const done = stepComplete(step);
+    numEl.textContent = done ? "✓" : STEP_NUMERALS[step];
+    numEl.classList.toggle("num-done", done);
+  });
+}
+
 /* ---------------- NAV ---------------- */
 function goStep(step){
   currentStep = step;
@@ -179,11 +209,11 @@ function personalHTML(){
   return `
     <div class="field">
       <label>Full name</label>
-      <input type="text" value="${esc(data.name)}" oninput="upd('name', this.value)" placeholder="Jordan Avery Smith">
+      <input type="text" value="${esc(data.name)}" oninput="upd('name', this.value)" placeholder="FOR EXAMPLE: Jordan Avery Smith">
     </div>
     <div class="row2">
       <div class="field"><label>City</label>
-        <input type="text" value="${esc(data.city)}" oninput="upd('city', this.value)" placeholder="Phoenix">
+        <input type="text" value="${esc(data.city)}" oninput="upd('city', this.value)" placeholder="FOR EXAMPLE: Phoenix">
       </div>
       <div class="field"><label>State</label>
         <select onchange="upd('state', this.value)">${stateOptionsHTML(data.state)}</select>
@@ -221,14 +251,14 @@ function experienceHTML(){
       </div>
       <div class="card-body ${isOpen ? "expanded" : "collapsed"}">
         <div class="field"><label>Job title</label>
-          <input type="text" value="${esc(e.title)}" oninput="updExp(${i},'title',this.value)" placeholder="Data Analyst">
+          <input type="text" value="${esc(e.title)}" oninput="updExp(${i},'title',this.value)" placeholder="FOR EXAMPLE: Data Analyst">
         </div>
         <div class="field"><label>Company</label>
           <input type="text" value="${esc(e.company)}" oninput="updExp(${i},'company',this.value)" placeholder="Company name">
         </div>
         <div class="row2">
           <div class="field"><label>City</label>
-            <input type="text" value="${esc(e.city)}" oninput="updExp(${i},'city',this.value)" placeholder="Phoenix">
+            <input type="text" value="${esc(e.city)}" oninput="updExp(${i},'city',this.value)" placeholder="FOR EXAMPLE: Phoenix">
           </div>
           <div class="field"><label>State</label>
             <select onchange="updExp(${i},'state',this.value)">${stateOptionsHTML(e.state)}</select>
@@ -254,7 +284,7 @@ function experienceHTML(){
           <input type="checkbox" ${e.current?'checked':''} onchange="toggleCurrent(${i}, this.checked)" style="width:auto;"> I currently work here
         </label>
         <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;display:block;">Step 1: List out what you did</label>
-        <textarea oninput="updExp(${i},'notes',this.value)" placeholder="load bags, helped customers, drove forklift...">${esc(e.notes)}</textarea>
+        <textarea oninput="updExp(${i},'notes',this.value)" placeholder="FOR EXAMPLE: load bags, helped customers, drove forklift...">${esc(e.notes)}</textarea>
         ${gptPanelHTML(i)}
         ${hasBullets ? `
         <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;">
@@ -327,14 +357,14 @@ function educationHTML(){
         </div>
         ${level>=1 ? `
         <div class="field"><label>Program / major</label>
-          <input type="text" value="${esc(ed.program)}" oninput="updEdu(${i},'program',this.value)" placeholder="Business Administration">
+          <input type="text" value="${esc(ed.program)}" oninput="updEdu(${i},'program',this.value)" placeholder="FOR EXAMPLE: Business Administration">
         </div>` : ""}
         <div class="field"><label>School</label>
           <input type="text" value="${esc(ed.school)}" oninput="updEdu(${i},'school',this.value)" placeholder="School name">
         </div>
         <div class="row2">
           <div class="field"><label>City</label>
-            <input type="text" value="${esc(ed.city)}" oninput="updEdu(${i},'city',this.value)" placeholder="Phoenix">
+            <input type="text" value="${esc(ed.city)}" oninput="updEdu(${i},'city',this.value)" placeholder="FOR EXAMPLE: Phoenix">
           </div>
           <div class="field"><label>State</label>
             <select onchange="updEdu(${i},'state',this.value)">${stateOptionsHTML(ed.state)}</select>
@@ -405,7 +435,7 @@ function skillsHTML(){
       <label>Add a Language</label>
       ${data.languages.map((l,i)=>`
         <div class="bullet-row">
-          <input type="text" style="flex:1;" value="${esc(l)}" oninput="updLang(${i},this.value)" placeholder="Marshallese, English, Spanish...">
+          <input type="text" style="flex:1;" value="${esc(l)}" oninput="updLang(${i},this.value)" placeholder="FOR EXAMPLE: Marshallese, English, Spanish...">
           ${data.languages.length>1 ? `<button class="icon-btn danger" onclick="removeLang(${i})">✕</button>` : ""}
         </div>`).join("")}
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addLang()">+ Add a Language</button>
@@ -414,7 +444,7 @@ function skillsHTML(){
       <label>Certifications (optional)</label>
       ${data.certifications.map((c,i)=>`
         <div class="bullet-row">
-          <input type="text" style="flex:1;" value="${esc(c)}" oninput="updCert(${i},this.value)" placeholder="Forklift, CPR, Food Handler's Card">
+          <input type="text" style="flex:1;" value="${esc(c)}" oninput="updCert(${i},this.value)" placeholder="FOR EXAMPLE: Forklift, CPR, Food Handler's Card">
           ${data.certifications.length>1 ? `<button class="icon-btn danger" onclick="removeCert(${i})">✕</button>` : ""}
         </div>`).join("")}
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addCert()">+ Add certification</button>
@@ -429,7 +459,7 @@ function skillsHTML(){
       <div class="card-body ${step1Open ? "expanded" : "collapsed"}">
         ${data.otherSkills.map((s,i)=>`
           <div class="bullet-row">
-            <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="customer service, teamwork, hard worker">
+            <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="FOR EXAMPLE: customer service, teamwork, hard worker">
             ${data.otherSkills.length>1 ? `<button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>` : ""}
           </div>`).join("")}
         <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill line</button>
@@ -1064,6 +1094,7 @@ function renderPreview(){
 
   checkFit(chosen);
   fitPageWrap();
+  updateStepChecks();
 }
 
 function getCurrentScale(el){
