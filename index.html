@@ -60,7 +60,7 @@
 </div>
 
 
-<script src="script.js?v=10"></script>
+<script src="script.js?v=11"></script>
 <div id="ios-save-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center;padding:20px;">
   <div style="background:#fff;border-radius:14px;max-width:340px;width:100%;padding:26px 22px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
     <h3 id="ios-save-title" style="margin:0 0 14px;color:#16233D;font-size:17px;">Your resume is ready!</h3>
@@ -70,5 +70,24 @@
     <button id="ios-save-close-btn" style="border:1px solid #D9D5C9;background:#fff;color:#16233D;font-size:14px;font-weight:600;padding:10px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeSaveInstructions()">Close</button>
   </div>
 </div>
+
+<!-- In-app browser warning (page load) -->
+<div id="inapp-warning-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#FDECEA;border:1px solid #E8B4AB;border-radius:14px;max-width:320px;width:100%;padding:24px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <p id="inapp-warning-text" style="margin:0 0 16px;color:#8A2E1E;font-size:14px;line-height:1.6;"></p>
+    <button style="border:none;background:#8A2E1E;color:#fff;font-size:15px;font-weight:700;padding:12px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeInappWarning()">Got it</button>
+  </div>
+</div>
+
+<!-- Download result modal -->
+<div id="download-result-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div id="download-result-content" style="background:#fff;border-radius:14px;max-width:320px;width:100%;padding:24px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <!-- Content will be set by JavaScript -->
+  </div>
+</div>
+
+<!-- Small red banner at top (persistent reminder) -->
+<div id="inapp-banner" style="display:none;background:#FDECEA;border:1px solid #E8B4AB;color:#8A2E1E;padding:10px 16px;text-align:center;font-size:12px;font-weight:600;position:sticky;top:0;z-index:100;line-height:1.4;"></div>
+
 </body>
 </html>
