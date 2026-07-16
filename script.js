@@ -132,7 +132,7 @@ function stateOptionsHTML(selected){
 
 const CURRENT_YEAR = new Date().getFullYear();
 // Actual dates (jobs, school attended) only ever land in the past or present — no future years.
-const YEAR_OPTIONS = (()=>{ const arr=[]; for(let y=CURRENT_YEAR; y>=1950; y--) arr.push(y); return arr; })();
+const YEAR_OPTIONS = (()=>{ const arr=[]; for(let y=CURRENT_YEAR; y>=1980; y--) arr.push(y); return arr; })();
 // Expected graduation year is the one date that's legitimately in the future, within a reasonable window.
 const GRAD_YEAR_OPTIONS = (()=>{ const arr=[]; for(let y=CURRENT_YEAR+6; y>=CURRENT_YEAR; y--) arr.push(y); return arr; })();
 function monthOptionsHTML(selected){
@@ -1263,21 +1263,30 @@ async function downloadPDF(){
     const blobUrl = URL.createObjectURL(pdf.output('blob'));
     const inApp = isInAppBrowser();
 
+    const timeSpent = Math.round((Date.now() - appStartTime) / 1000);
+    const currentStep = document.querySelector('.step-btn.active')?.getAttribute('data-step') || 'unknown';
+
     if(inApp){
       // In in-app browser: show failure modal
       showDownloadResult(false);
+      trackDownload(false, timeSpent, currentStep);
     } else {
       // In external browser: show success modal
       showDownloadResult(true);
       // Attempt automatic download
       try{
         pdf.save(filename);
+        trackDownload(true, timeSpent, currentStep);
       } catch(downloadErr){
         console.error("Automatic download failed:", downloadErr);
+        trackDownload(false, timeSpent, currentStep);
       }
     }
 
   } catch(err){
+    const timeSpent = Math.round((Date.now() - appStartTime) / 1000);
+    const currentStep = document.querySelector('.step-btn.active')?.getAttribute('data-step') || 'unknown';
+    trackDownload(false, timeSpent, currentStep);
     alert("Download hit a snag: " + err.message + "\n\nYou can also press Ctrl/Cmd+P and choose 'Save as PDF' as a backup.");
     console.error(err);
   } finally {
@@ -1382,6 +1391,93 @@ function showDownloadResult(success){
 function closeDownloadResult(){
   document.getElementById("download-result-modal").style.display = "none";
 }
+
+/* ---------------- ANALYTICS ---------------- */
+const sessionId = (() => {
+  let id = localStorage.getItem('resumeBuilderSessionId');
+  if (!id) {
+    id = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('resumeBuilderSessionId', id);
+  }
+  return id;
+})();
+
+const appStartTime = Date.now();
+
+function getMSTTime() {
+  const now = new Date();
+  const mstTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Denver' }));
+  const month = String(mstTime.getMonth() + 1).padStart(2, '0');
+  const day = String(mstTime.getDate()).padStart(2, '0');
+  const year = mstTime.getFullYear();
+  const hours = mstTime.getHours() % 12 || 12;
+  const minutes = String(mstTime.getMinutes()).padStart(2, '0');
+  const ampm = mstTime.getHours() >= 12 ? 'PM' : 'AM';
+  return {
+    date: `${month}/${day}/${year}`,
+    time: `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`
+  };
+}
+
+function getBrowserType() {
+  const ua = navigator.userAgent;
+  if (ua.indexOf('Firefox') > -1) return 'Firefox';
+  if (ua.indexOf('Chrome') > -1) return 'Chrome';
+  if (ua.indexOf('Safari') > -1) return 'Safari';
+  if (ua.indexOf('Edge') > -1) return 'Edge';
+  return 'Other';
+}
+
+function getDeviceType() {
+  return window.innerWidth <= 860 ? 'mobile' : 'desktop';
+}
+
+function getCurrentLanguage() {
+  return document.getElementById('lang-toggle')?.textContent.includes('English') ? 'Marshallese' : 'English';
+}
+
+function trackEvent(eventName, eventData = {}) {
+  const mst = getMSTTime();
+  const payload = {
+    timestamp: mst.date + ' ' + mst.time,
+    date: mst.date,
+    time: mst.time,
+    event: eventName,
+    sessionId: sessionId,
+    deviceType: getDeviceType(),
+    browser: getBrowserType(),
+    language: getCurrentLanguage(),
+    ...eventData
+  };
+
+  // Log to console for debugging
+  console.log('Analytics:', payload);
+
+  // Send to backend (when available)
+  fetch('/api/analytics', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(() => {}); // silently fail if endpoint doesn't exist
+}
+
+function trackAppOpen() {
+  trackEvent('app_opened', {
+    userAgent: navigator.userAgent
+  });
+}
+
+function trackDownload(success, timeSpentSeconds, currentStep) {
+  trackEvent('download_attempted', {
+    success: success,
+    timeSpentSeconds: timeSpentSeconds,
+    step: currentStep,
+    mode: document.querySelector('.card-body.expanded') ? 'chatgpt' : 'manual'
+  });
+}
+
+// Track app open on page load
+trackAppOpen();
 
 /* ---------------- INIT ---------------- */
 expandedJobs.add(0); // start with job 0 open
