@@ -10,7 +10,7 @@ const MH = {
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
   copyStep2Intro: "Step 2: Copy ChatGPT",
-  copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
+  copyIconTapText: "Jibidre icon e im rol tok ñan peij in.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 const EN = {
