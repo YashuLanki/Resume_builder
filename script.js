@@ -9,7 +9,7 @@ const MH = {
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
-  copyStep2Intro: "Step 2: Tap icon to copy",
+  copyStep2Intro: "Step 2: Copy ChatGPT",
   copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
@@ -21,7 +21,7 @@ const EN = {
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
-  copyStep2Intro: "Step 2: Tap icon to copy",
+  copyStep2Intro: "Step 2: Copy ChatGPT",
   copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
@@ -853,7 +853,7 @@ function esc(s){
 /* ---- Shared: Step 2 illustration showing where ChatGPT's copy icon is ---- */
 function copyAnswerIllustrationHTML(){
   return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
-  <div><strong>Step 2:</strong> Tap icon to copy</div>
+  <div><strong>${esc(mh('copyStep2Intro'))}</strong></div>
   <div>${esc(mh('copyIconTapText'))}</div>
 </div></div>`;
 }
