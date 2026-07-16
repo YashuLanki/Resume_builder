@@ -291,8 +291,7 @@ function experienceHTML(){
           <input type="checkbox" ${e.current?'checked':''} onchange="toggleCurrent(${i}, this.checked)" style="width:auto;"> I currently work here
         </label>
         <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px;">
-          <strong style="font-size:14px;color:var(--navy);display:block;">Describe what you did</strong>
-          <div class="hint" style="margin-top:2px;margin-bottom:10px;">List out what you did here.</div>
+          <strong style="font-size:14px;color:var(--navy);display:block;margin-bottom:10px;">List and describe what you did for Job ${i+1}</strong>
         </div>
         ${!e.bulletMode ? `
         <div style="margin-top:6px;">
@@ -485,8 +484,7 @@ function skillsHTML(){
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addCert()">+ Add certification</button>
     </div>
     <div style="border-top:1px solid var(--line);margin:14px 0 14px;padding-top:14px;">
-      <strong style="font-size:14px;color:var(--navy);display:block;">General skills</strong>
-      <div class="hint" style="margin-top:2px;">List your skills here.</div>
+      <strong style="font-size:14px;color:var(--navy);display:block;">List your general skills here</strong>
     </div>
     <div class="field" style="margin-top:6px;">
       ${!skillsInputMode ? `
@@ -746,7 +744,19 @@ function insertGptSkills(){
   // Merge with what's already there instead of replacing it outright — otherwise anything
   // typed in manually after a previous ChatGPT round-trip (like a newly added certification)
   // gets silently wiped out if this response doesn't happen to mention it too.
-  const mergeUnique = (existing, incoming)=> Array.from(new Set([...existing.filter(v=>v.trim()), ...incoming]));
+  // Case-insensitive dedup: "teamwork" and "Teamwork" are treated as the same skill.
+  const mergeUnique = (existing, incoming)=> {
+    const seen = new Set();
+    const result = [];
+    [...existing.filter(v=>v.trim()), ...incoming].forEach(v => {
+      const lower = v.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        result.push(v);
+      }
+    });
+    return result;
+  };
   if(langVals.length) data.languages = mergeUnique(data.languages, langVals);
   if(certVals.length) data.certifications = mergeUnique(data.certifications, certVals);
   if(otherPhrases.length) data.otherSkills = mergeUnique(data.otherSkills, otherPhrases);
@@ -1250,19 +1260,21 @@ async function downloadPDF(){
     pdf.addImage(imgData, "JPEG", xOff, 0, finalW, finalH);
     const filename = (data.name.trim().replace(/\s+/g,"_") || "resume") + "_Resume.pdf";
 
-    // Show the save instructions FIRST, no matter what — this guarantees
-    // every user sees it, even if the automatic download attempt below
-    // fails or throws on their particular browser.
     const blobUrl = URL.createObjectURL(pdf.output('blob'));
-    showSaveInstructions(blobUrl, filename);
+    const inApp = isInAppBrowser();
 
-    // Now attempt the normal automatic download as a bonus. Wrapped in its
-    // own try/catch so if it fails (as it does on Safari), it fails quietly
-    // and doesn't interrupt anything — the popup above already has them covered.
-    try{
-      pdf.save(filename);
-    } catch(downloadErr){
-      console.error("Automatic download failed, relying on manual link instead:", downloadErr);
+    if(inApp){
+      // In in-app browser: show failure modal
+      showDownloadResult(false);
+    } else {
+      // In external browser: show success modal
+      showDownloadResult(true);
+      // Attempt automatic download
+      try{
+        pdf.save(filename);
+      } catch(downloadErr){
+        console.error("Automatic download failed:", downloadErr);
+      }
     }
 
   } catch(err){
@@ -1275,12 +1287,25 @@ async function downloadPDF(){
   }
 }
 
-// Facebook and Instagram's in-app browsers are known to block or silently fail
-// blob/file downloads — a likely cause of "page cannot be loaded" reports, since
-// this tool is shared through the Arizona Marshallese Community Facebook group.
-function isInAppBrowser(){
+// In-app browsers (Facebook, Instagram, Snapchat, WhatsApp, TikTok, Messenger)
+// are known to block or silently fail blob/file downloads.
+function getInAppBrowserName(){
   const ua = navigator.userAgent || "";
-  return /FBAN|FBAV|Instagram/i.test(ua);
+  if(/FBAN|FBAV/i.test(ua)) return "Facebook";
+  if(/Instagram/i.test(ua)) return "Instagram";
+  if(/Snapchat/i.test(ua)) return "Snapchat";
+  if(/WhatsApp/i.test(ua)) return "WhatsApp";
+  if(/TikTok/i.test(ua)) return "TikTok";
+  if(/Messenger/i.test(ua)) return "Messenger";
+  return null;
+}
+
+function isInAppBrowser(){
+  return getInAppBrowserName() !== null;
+}
+
+function isExternalBrowser(){
+  return !isInAppBrowser();
 }
 
 let lastSaveBlobUrl = null;
@@ -1297,7 +1322,7 @@ function showSaveInstructions(blobUrl, filename){
   const warning = document.getElementById("ios-save-inapp-warning");
   if(isInAppBrowser()){
     warning.style.display = "block";
-    warning.innerHTML = "You're viewing this inside Facebook/Instagram, which can block downloads. Tap the <strong>••• or ⋮ menu</strong> at the top of the screen and choose <strong>Open in Browser</strong> (Safari or Chrome), then come back to this page and tap the button below again.";
+    warning.innerHTML = `You're viewing this inside ${appName}, which can block downloads. Tap the <strong>••• or ⋮ menu</strong> at the top of the screen and choose <strong>Open External Browser</strong> (Safari or Chrome), then come back to this page and tap the button below again.`;
   } else {
     warning.style.display = "none";
   }
@@ -1308,7 +1333,58 @@ function closeSaveInstructions(){
   document.getElementById("ios-save-overlay").style.display = "none";
 }
 
+function showInappWarning(){
+  const appName = getInAppBrowserName();
+  if(!appName) return;
+  const text = document.getElementById("inapp-warning-text");
+  text.textContent = `You're using ${appName}. To download your resume, please tap the ••• menu and select "Open external browser"`;
+  document.getElementById("inapp-warning-modal").style.display = "flex";
+}
+
+function closeInappWarning(){
+  document.getElementById("inapp-warning-modal").style.display = "none";
+  const appName = getInAppBrowserName();
+  if(appName){
+    const banner = document.getElementById("inapp-banner");
+    banner.innerHTML = `WARNING: Download might not work in ${appName}. We recommend using Safari and Chrome instead. Tap ••• button and select <strong>Open External Browser</strong>.`;
+    banner.style.display = "block";
+  }
+}
+
+function showDownloadResult(success){
+  const modal = document.getElementById("download-result-modal");
+  const content = document.getElementById("download-result-content");
+
+  if(success){
+    content.innerHTML = `
+      <p style="margin:0 0 14px;color:#16233D;font-size:15px;font-weight:700;">Downloaded successfully!</p>
+      <p style="margin:0 0 12px;color:#16233D;font-size:13px;font-weight:600;">To find your Resume:</p>
+      <ul style="text-align:left;margin:0 0 16px;padding-left:20px;color:#16233D;font-size:13px;line-height:1.6;">
+        <li>Downloads or Files app</li>
+        <li>Your browser's downloads</li>
+      </ul>
+      <button style="border:none;background:#B68D40;color:#fff;font-size:15px;font-weight:700;padding:12px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeDownloadResult()">Got it</button>
+    `;
+  } else {
+    content.innerHTML = `
+      <p style="margin:0 0 14px;color:#8A2E1E;background:#FDECEA;border:1px solid #E8B4AB;padding:12px;border-radius:8px;font-size:13px;line-height:1.6;">If download didn't work, please tap the ••• menu → Select <strong>"Open External Browser"</strong></p>
+      <p style="margin:0 0 12px;color:#16233D;font-size:13px;font-weight:600;">To find your Resume:</p>
+      <ul style="text-align:left;margin:0 0 16px;padding-left:20px;color:#16233D;font-size:13px;line-height:1.6;">
+        <li>Downloads or Files app</li>
+        <li>Your browser's downloads</li>
+      </ul>
+      <button style="border:none;background:#8A2E1E;color:#fff;font-size:15px;font-weight:700;padding:12px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeDownloadResult()">Got it</button>
+    `;
+  }
+  modal.style.display = "flex";
+}
+
+function closeDownloadResult(){
+  document.getElementById("download-result-modal").style.display = "none";
+}
+
 /* ---------------- INIT ---------------- */
 expandedJobs.add(0); // start with job 0 open
 renderForm();
 setMobileView("form");
+showInappWarning(); // warn if in in-app browser
