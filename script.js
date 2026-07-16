@@ -1398,6 +1398,10 @@ function closeDownloadResult(){
   document.getElementById("download-result-modal").style.display = "none";
 }
 
+// Google Apps Script web-app URL (see google-apps-script/README.md).
+// Leave empty to disable analytics.
+const ANALYTICS_URL = "";
+
 /* ---------------- ANALYTICS ---------------- */
 const sessionId = (() => {
   let id = localStorage.getItem('resumeBuilderSessionId');
@@ -1459,12 +1463,15 @@ function trackEvent(eventName, eventData = {}) {
   // Log to console for debugging
   console.log('Analytics:', payload);
 
-  // Send to backend (when available)
-  fetch('/api/analytics', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).catch(() => {}); // silently fail if endpoint doesn't exist
+  if(ANALYTICS_URL){
+    // text/plain + no-cors avoids a CORS preflight, which Apps Script can't answer.
+    fetch(ANALYTICS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    }).catch(() => {}); // never block or bother the user over analytics
+  }
 }
 
 function trackAppOpen() {
