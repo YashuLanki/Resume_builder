@@ -9,9 +9,8 @@ const MH = {
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
-  copyAnswerTitle: "Step 2: Tap this icon to copy",
-  copyIconLabel: "← tap here to copy",
-  copyAnswerHint: "Copy ChatGPT's answer and come back to this page",
+  copyStep2Intro: "Step 2: Tap icon to copy",
+  copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 const EN = {
@@ -22,9 +21,8 @@ const EN = {
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
-  copyAnswerTitle: "Step 2: Tap this icon to copy",
-  copyIconLabel: "← tap here to copy",
-  copyAnswerHint: "Copy ChatGPT's answer and come back to this page",
+  copyStep2Intro: "Step 2: Tap icon to copy",
+  copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
@@ -854,20 +852,10 @@ function esc(s){
 
 /* ---- Shared: Step 2 illustration showing where ChatGPT's copy icon is ---- */
 function copyAnswerIllustrationHTML(){
-  return `
-  <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">${esc(mh('copyAnswerTitle'))}</label>
-  <div class="gci">
-    <div class="gci-bubble">
-      <div class="gci-line"></div>
-      <div class="gci-line short"></div>
-      <div class="gci-line"></div>
-      <div class="gci-actions">
-        <span class="gci-copy-icon">⧉</span>
-        <span class="gci-callout">${esc(mh('copyIconLabel'))}</span>
-      </div>
-    </div>
-    <div class="hint" style="margin-top:8px;">${esc(mh('copyAnswerHint'))}</div>
-  </div>`;
+  return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
+  <div><strong>Step 2:</strong> Tap icon to copy</div>
+  <div>${esc(mh('copyIconTapText'))}</div>
+</div></div>`;
 }
 
 /* ---------------- STATEMENT GENERATOR ---------------- */
