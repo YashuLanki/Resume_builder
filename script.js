@@ -4,21 +4,31 @@ let lang = 'en'; // 'en' = English (default), 'mh' = Marshallese
 const MH = {
   brandbarHint: "Kanne tab 1-5. Bōk e PDF eo am ilo tab eo eliktata. Resume in ej limit i yuk ñan 1 wōt peij.",
   expHint: "Likit jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj makke kwalok jerbal eo ekaal mokta ekkar ñan iio.",
-  alreadyCopied: "(Em\u014dj an copy - kajju paste w\u014dt ilo ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
+  gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
+  gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
+  gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  copyStep2Intro: "Step 2: Copy ChatGPT",
+  copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
+  pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 const EN = {
   brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
   expHint: "Add up to 3 jobs in any order. Your resume will automatically list the most recent first.",
-  alreadyCopied: "(Already copied \u2014 just paste it in ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
+  gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
+  gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
+  gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  copyStep2Intro: "Step 2: Copy ChatGPT",
+  copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
+  pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
-  if(lang==='mh') return 'Copy ta eo ChatGPT ear lewaj \u00f1an yuk, paste ijin, innem jibidre button ne ej ba Step ' + step;
-  return 'Copy what ChatGPT gave you, paste it here, then click the button below';
+  if(lang==='mh') return 'Paste eo an ChatGPT ijin, innem jibidre button eo Step ' + step;
+  return `Paste ChatGPT's answer here, then click the Step ${step} button below`;
 }
 
 
@@ -301,7 +311,7 @@ function experienceHTML(){
           </div>
         </div>
         ` : e.bulletMode==="gpt" ? `
-        <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;display:block;">Step 1: List out what you did</label>
+        <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;display:block;">First, list what you did at this job</label>
         <textarea oninput="updExp(${i},'notes',this.value)" placeholder="FOR EXAMPLE: load bags, helped customers, drove forklift...">${esc(e.notes)}</textarea>
         ${gptPanelHTML(i)}
         ${hasBullets ? `
@@ -342,15 +352,15 @@ function statementHTML(){
     <div class="hint" style="margin-top:4px;line-height:1.6;">
       ${lang==='mh' ? `
         Section in ej ñan paragraph eo jinoin ilo resume in am. Loor e step kein jilu:<br>
-        1. Jibidre <strong>Step 1</strong> – emoj an copy aolep information ko ñan kwe.<br>
-        2. Etal ñan ChatGPT, jibed message box eo, im paste (emoj an makke copy, kajju paste wōt).<br>
-        3. Copy ta eo ChatGPT ej lewaj likiti ilo box ne itulal, innem jibidre <strong>Step 2</strong>.
+        1. Jibidre <strong>Step 1</strong> – ChatGPT enaj peliñi ilo tab ekaal kab information ko am emoj an je ilowaan. Jibidre Send ijeno.<br>
+        2. Ñe ChatGPT ej uwaake, jibed copy icon eo iuñin uwaak eo an.<br>
+        3. Rooltok ijin, paste e ilo box ne, innem jibidre <strong>Step 3</strong>.
       ` : `
         This creates the introduction paragraph at the top of your resume. Here's what to do:
         <div style='margin-top:6px;padding-left:4px;'>
-          <div style='margin-bottom:3px;'>1. Click <strong>Step 1</strong> — it already copied everything for you.</div>
-          <div style='margin-bottom:3px;'>2. Go to ChatGPT, tap the message box, and paste (even if it seems like nothing was copied, just paste).</div>
-          <div>3. Copy what ChatGPT gives back, paste it in the box below, then click <strong>Step 2</strong>.</div>
+          <div style='margin-bottom:3px;'>1. Click <strong>Step 1</strong> — ChatGPT opens with your info already typed in. Tap Send there.</div>
+          <div style='margin-bottom:3px;'>2. When ChatGPT answers, tap the copy icon under its reply.</div>
+          <div>3. Come back here, paste it in the box, then click <strong>Step 3</strong>.</div>
         </div>
       `}
     </div>
@@ -544,6 +554,46 @@ function removeBullet(i,bi){ data.experiences[i].bullets.splice(bi,1); renderFor
 function addBullet(i){ data.experiences[i].bullets.push(""); renderForm(); }
 function setBulletMode(i,mode){ data.experiences[i].bulletMode = mode; renderForm(); }
 
+/* ---- Shared: open ChatGPT with the prompt pre-filled (clipboard fallback) ---- */
+function openChatGptWithPrompt(prompt, statusElId){
+  const status = document.getElementById(statusElId);
+  const url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
+  const win = window.open(url, '_blank');
+  if(win){
+    if(status) status.textContent = mh('gptOpened');
+    return;
+  }
+  // Popup blocked (common in in-app browsers) — fall back to copying the prompt.
+  copyTextToClipboard(prompt,
+    ()=>{ if(status) status.textContent = mh('gptCopiedFallback'); },
+    ()=>{ if(status) status.textContent = mh('gptCopyFailed'); }
+  );
+}
+function copyTextToClipboard(text, onOk, onFail){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(onOk).catch(()=>{ legacyCopy(text, onOk, onFail); });
+  } else {
+    legacyCopy(text, onOk, onFail);
+  }
+}
+function legacyCopy(text, onOk, onFail){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try{ document.execCommand('copy'); onOk(); }catch(e){ onFail(); }
+  document.body.removeChild(ta);
+}
+function markPasted(feedbackId){
+  setTimeout(()=>{
+    const el = document.getElementById(feedbackId);
+    if(el) el.textContent = mh('pasteGotIt');
+  }, 50);
+}
+
 /* ---- Bullet writing help: simplified ChatGPT flow (one box, 5 bullets) ---- */
 function buildGptPrompt(exp){
   const title = (exp.title||"").trim();
@@ -559,41 +609,20 @@ function buildGptPrompt(exp){
 }
 function gptPanelHTML(i){
   const exp = data.experiences[i];
-  const prompt = buildGptPrompt(exp);
   return `
   <div class="guided-panel" style="margin-top:12px;">
-    <textarea id="gpt-prompt-${i}" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">${esc(prompt)}</textarea>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Paste in ChatGPT</label>
-    <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}\n</div>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 2: Click here to paste in ChatGPT</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Generate</label>
-    <textarea id="gpt-paste-${i}" style="margin-bottom:10px;" placeholder="${pastePlaceholder(3)}"></textarea>
-    <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Click here to generate bullet points</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
+    <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Open ChatGPT</button>
+    ${copyAnswerIllustrationHTML()}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    <textarea id="gpt-paste-${i}" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('gpt-paste-fb-${i}')"></textarea>
+    <div class="hint" id="gpt-paste-fb-${i}" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
+    <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Generate my bullet points</button>
   </div>`;
 }
 function openAndCopyGpt(i){
-  const win = window.open('https://chatgpt.com/', '_blank');
-  copyGptPrompt(i,!win);
-}
-function copyGptPrompt(i,popupBlocked){
-  const ta = document.getElementById(`gpt-prompt-${i}`);
-  const status = document.getElementById(`gpt-status-${i}`);
-  if(!ta) return;
-  ta.value = buildGptPrompt(data.experiences[i]);
-  ta.focus();
-  ta.select();
-  const copiedText = popupBlocked
-    ? "Copied ✓ — your browser blocked the popup, so open chatgpt.com yourself and paste it in."
-    : "Copied ✓ — paste it into the ChatGPT tab that just opened, then bring the answer back below.";
-  const failedText = "Couldn't auto-copy — try again, or open chatgpt.com yourself" + (popupBlocked ? "." : " and paste manually.");
-  const markCopied = ()=>{ if(status) status.textContent = copiedText; };
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(ta.value).then(markCopied).catch(()=>{
-      try{ document.execCommand('copy'); markCopied(); }catch(e){ if(status) status.textContent=failedText; }
-    });
-  } else {
-    try{ document.execCommand('copy'); markCopied(); }catch(e){ if(status) status.textContent=failedText; }
-  }
+  openChatGptWithPrompt(buildGptPrompt(data.experiences[i]), `gpt-status-${i}`);
 }
 
 /* ---- Skills writing help: free ChatGPT link ---- */
@@ -615,41 +644,20 @@ function buildSkillsGptPrompt(){
   return p;
 }
 function skillsGptPanelHTML(){
-  const prompt = buildSkillsGptPrompt();
   return `
   <div class="guided-panel" style="margin-top:12px;">
-    <textarea id="skills-gpt-prompt" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">${esc(prompt)}</textarea>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Paste in ChatGPT</label>
-    <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}</div>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 1: Click here to paste ChatGPT</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
-    <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(2)}"></textarea>
-    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 2: Click here to update my skills</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
+    <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Open ChatGPT</button>
+    ${copyAnswerIllustrationHTML()}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    <textarea id="skills-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('skills-gpt-paste-fb')"></textarea>
+    <div class="hint" id="skills-gpt-paste-fb" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
+    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 3: Update my skills</button>
   </div>`;
 }
 function openAndCopySkillsGpt(){
-  const win = window.open('https://chatgpt.com/', '_blank');
-  copySkillsGptPrompt(!win);
-}
-function copySkillsGptPrompt(popupBlocked){
-  const ta = document.getElementById("skills-gpt-prompt");
-  const status = document.getElementById("skills-gpt-status");
-  if(!ta) return;
-  ta.value = buildSkillsGptPrompt();
-  ta.focus();
-  ta.select();
-  const copiedText = popupBlocked
-    ? "Copied ✓ — your browser blocked the popup, so open chatgpt.com yourself and paste it in."
-    : "Copied ✓ — paste it into the ChatGPT tab that just opened.";
-  const failedText = "Couldn't auto-copy — try tapping the button again" + (popupBlocked ? ", then open chatgpt.com yourself." : ".");
-  const markCopied = ()=>{ if(status) status.textContent = copiedText; };
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(ta.value).then(markCopied).catch(()=>{
-      try{ document.execCommand('copy'); markCopied(); }catch(e){ if(status) status.textContent=failedText; }
-    });
-  } else {
-    try{ document.execCommand('copy'); markCopied(); }catch(e){ if(status) status.textContent=failedText; }
-  }
+  openChatGptWithPrompt(buildSkillsGptPrompt(), "skills-gpt-status");
 }
 
 
@@ -842,6 +850,14 @@ function esc(s){
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
+/* ---- Shared: Step 2 illustration showing where ChatGPT's copy icon is ---- */
+function copyAnswerIllustrationHTML(){
+  return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
+  <div><strong>${esc(mh('copyStep2Intro'))}</strong></div>
+  <div>${esc(mh('copyIconTapText'))}</div>
+</div></div>`;
+}
+
 /* ---------------- STATEMENT GENERATOR ---------------- */
 /* ---------------- EXPERIENCE ORDERING (most recent first, automatic) ---------------- */
 function fieldDateScore(month, year){
@@ -916,16 +932,16 @@ function buildStatementGptPrompt(d){
   return p;
 }
 function statementGptPanelHTML(){
-  const prompt = buildStatementGptPrompt(data);
   return `
   <div class="guided-panel">
-    <textarea id="statement-gpt-prompt" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">${esc(prompt)}</textarea>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Paste in ChatGPT</label>
-    <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}</div>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Click here to paste in ChatGPT</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
-    <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(2)}"></textarea>
-    <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 2: Click here update Summary</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Open ChatGPT</label>
+    <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Open ChatGPT</button>
+    ${copyAnswerIllustrationHTML()}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    <textarea id="statement-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('statement-gpt-paste-fb')"></textarea>
+    <div class="hint" id="statement-gpt-paste-fb" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
+    <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 3: Update my summary</button>
     ${data.statementEdited ? `
     <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;text-align:center;">
       <strong style="font-size:14px;color:var(--ok);">✓ DONE!</strong>
@@ -935,29 +951,7 @@ function statementGptPanelHTML(){
   </div>`;
 }
 function openAndCopyStatementGpt(){
-  const win = window.open('https://chatgpt.com/', '_blank');
-  copyStatementGptPrompt(!win);
-}
-function copyStatementGptPrompt(popupBlocked){
-  const ta = document.getElementById("statement-gpt-prompt");
-  const status = document.getElementById("statement-gpt-status");
-  const copiedText = popupBlocked
-    ? "Copied ✓ — your browser blocked the popup, so open chatgpt.com yourself and paste it in."
-    : "Copied ✓ — paste it into the ChatGPT tab that just opened.";
-  const failedText = "Couldn't auto-copy — try tapping the button again" + (popupBlocked ? ", then open chatgpt.com yourself." : ".");
-  const markCopied = ()=>{ if(status) status.textContent = copiedText; };
-  if(ta){
-    ta.value = buildStatementGptPrompt(data);
-    ta.focus();
-    ta.select();
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(ta.value).then(markCopied).catch(()=>{
-        try{ document.execCommand('copy'); markCopied(); }catch(e){ if(status) status.textContent=failedText; }
-      });
-    } else {
-      try{ document.execCommand('copy'); markCopied(); }catch(e){ if(status) status.textContent=failedText; }
-    }
-  }
+  openChatGptWithPrompt(buildStatementGptPrompt(data), "statement-gpt-status");
 }
 function insertGptStatement(){
   const ta = document.getElementById("statement-gpt-paste");
@@ -1392,6 +1386,12 @@ function closeDownloadResult(){
   document.getElementById("download-result-modal").style.display = "none";
 }
 
+// Google Apps Script web-app URL for analytics (leave empty to disable).
+// Setup: 1) Create a Google Sheet. 2) Extensions → Apps Script, paste the analytics.gs code
+// (see the git history for the code). 3) Deploy as Web app (Execute as: Me, Access: Anyone).
+// 4) Copy the web app URL and paste it here. 5) Bump script.js?v= in index.html to clear cache.
+const ANALYTICS_URL = "";
+
 /* ---------------- ANALYTICS ---------------- */
 const sessionId = (() => {
   let id = localStorage.getItem('resumeBuilderSessionId');
@@ -1453,12 +1453,15 @@ function trackEvent(eventName, eventData = {}) {
   // Log to console for debugging
   console.log('Analytics:', payload);
 
-  // Send to backend (when available)
-  fetch('/api/analytics', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).catch(() => {}); // silently fail if endpoint doesn't exist
+  if(ANALYTICS_URL){
+    // text/plain + no-cors avoids a CORS preflight, which Apps Script can't answer.
+    fetch(ANALYTICS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    }).catch(() => {}); // never block or bother the user over analytics
+  }
 }
 
 function trackAppOpen() {
