@@ -290,6 +290,10 @@ function experienceHTML(){
         <label style="font-size:12px;display:flex;gap:6px;align-items:center;margin-bottom:10px;color:var(--navy);font-weight:600;">
           <input type="checkbox" ${e.current?'checked':''} onchange="toggleCurrent(${i}, this.checked)" style="width:auto;"> I currently work here
         </label>
+        <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px;">
+          <strong style="font-size:14px;color:var(--navy);display:block;">Describe what you did</strong>
+          <div class="hint" style="margin-top:2px;margin-bottom:10px;">This turns into the bullet points listed under this job on your resume.</div>
+        </div>
         ${!e.bulletMode ? `
         <div style="margin-top:6px;">
           <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:8px;">How do you want to write your bullet points?</label>
@@ -481,8 +485,11 @@ function skillsHTML(){
         </div>`).join("")}
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addCert()">+ Add certification</button>
     </div>
+    <div style="border-top:1px solid var(--line);margin:14px 0 14px;padding-top:14px;">
+      <strong style="font-size:14px;color:var(--navy);display:block;">General skills</strong>
+      <div class="hint" style="margin-top:2px;">Separate from your languages and certifications above — list general skills like teamwork, customer service, or time management. Don't repeat certifications here.</div>
+    </div>
     <div class="field" style="margin-top:6px;">
-      <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:8px;">Other skills</label>
       ${!skillsInputMode ? `
       <div style="display:flex;gap:8px;">
         <button class="gold-btn" style="flex:1;" onclick="setSkillsMode('gpt')">Get help from ChatGPT</button>
@@ -1269,8 +1276,33 @@ async function downloadPDF(){
   }
 }
 
+// Facebook and Instagram's in-app browsers are known to block or silently fail
+// blob/file downloads — a likely cause of "page cannot be loaded" reports, since
+// this tool is shared through the Arizona Marshallese Community Facebook group.
+function isInAppBrowser(){
+  const ua = navigator.userAgent || "";
+  return /FBAN|FBAV|Instagram/i.test(ua);
+}
+
+let lastSaveBlobUrl = null;
 function showSaveInstructions(blobUrl, filename){
+  if(lastSaveBlobUrl) URL.revokeObjectURL(lastSaveBlobUrl);
+  lastSaveBlobUrl = blobUrl;
+
   document.getElementById("ios-save-title").textContent = mh('iosSaveTitle');
+
+  const link = document.getElementById("ios-save-link");
+  link.href = blobUrl;
+  link.setAttribute("download", filename);
+
+  const warning = document.getElementById("ios-save-inapp-warning");
+  if(isInAppBrowser()){
+    warning.style.display = "block";
+    warning.innerHTML = "You're viewing this inside Facebook/Instagram, which can block downloads. Tap the <strong>••• or ⋮ menu</strong> at the top of the screen and choose <strong>Open in Browser</strong> (Safari or Chrome), then come back to this page and tap the button below again.";
+  } else {
+    warning.style.display = "none";
+  }
+
   document.getElementById("ios-save-overlay").style.display = "flex";
 }
 function closeSaveInstructions(){
