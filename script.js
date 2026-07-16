@@ -1386,8 +1386,10 @@ function closeDownloadResult(){
   document.getElementById("download-result-modal").style.display = "none";
 }
 
-// Google Apps Script web-app URL (see google-apps-script/README.md).
-// Leave empty to disable analytics.
+// Google Apps Script web-app URL for analytics (leave empty to disable).
+// Setup: 1) Create a Google Sheet. 2) Extensions → Apps Script, paste the analytics.gs code
+// (see the git history for the code). 3) Deploy as Web app (Execute as: Me, Access: Anyone).
+// 4) Copy the web app URL and paste it here. 5) Bump script.js?v= in index.html to clear cache.
 const ANALYTICS_URL = "";
 
 /* ---------------- ANALYTICS ---------------- */
