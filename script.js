@@ -663,7 +663,7 @@ function stripMarkdownLine(line){
 function splitGptLines(text){
   let lines = (text||"")
     .split(/\r?\n/)
-    .map(l => l.replace(/^[\-\*•]\s*/,"").replace(/^\d+[\.\)]\s*/,""))  // strip leading bullet/number marker first
+    .map(l => l.trim().replace(/^[\-\*•]\s*/,"").replace(/^\d+[\.\)]\s*/,""))  // strip leading bullet/number marker first (ChatGPT sometimes indents it)
     .map(l => stripMarkdownLine(l).trim())                              // then strip any remaining markdown emphasis
     .filter(Boolean);
   // Fallback for ChatGPT answers that come back as one paragraph instead of separate lines
@@ -1107,7 +1107,7 @@ function buildResumeHTML(opts){
     if(certs.length) skillLines.push(`Certifications: ${certs.join(", ")}.`);
     const others = data.otherSkills.filter(s=>s.trim());
     if(others.length){
-      const formatted = others.map(s=>{ const t = s.trim(); return t.charAt(0).toUpperCase() + t.slice(1); });
+      const formatted = others.map(s=>{ const t = s.trim().replace(/[.!?;]+$/,""); return t.charAt(0).toUpperCase() + t.slice(1); });
       skillLines.push(formatted.join(" | "));
     }
     const shownLines = skillsMode === "max3" ? skillLines.slice(0,3) : skillLines;
