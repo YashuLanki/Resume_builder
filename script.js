@@ -9,6 +9,9 @@ const MH = {
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  copyAnswerTitle: "Step 2: Copy ChatGPT's answer",
+  copyIconLabel: "Tap this copy icon under ChatGPT's reply",
+  copyAnswerHint: "When ChatGPT answers, look under its reply for the copy icon, tap it, then come back to this page.",
 };
 const EN = {
   brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
@@ -18,6 +21,9 @@ const EN = {
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  copyAnswerTitle: "Step 2: Copy ChatGPT's answer",
+  copyIconLabel: "Tap this copy icon under ChatGPT's reply",
+  copyAnswerHint: "When ChatGPT answers, look under its reply for the copy icon, tap it, then come back to this page.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
@@ -602,7 +608,8 @@ function gptPanelHTML(i){
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 1: Open ChatGPT — your info goes with you</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    ${copyAnswerIllustrationHTML()}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
     <textarea id="gpt-paste-${i}" style="margin-bottom:10px;" placeholder="${pastePlaceholder(3)}"></textarea>
     <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Generate my bullet points</button>
   </div>`;
@@ -635,7 +642,8 @@ function skillsGptPanelHTML(){
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 1: Open ChatGPT — your info goes with you</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    ${copyAnswerIllustrationHTML()}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
     <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(3)}"></textarea>
     <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 3: Update my skills</button>
   </div>`;
@@ -834,6 +842,24 @@ function esc(s){
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
+/* ---- Shared: Step 2 illustration showing where ChatGPT's copy icon is ---- */
+function copyAnswerIllustrationHTML(){
+  return `
+  <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">${esc(mh('copyAnswerTitle'))}</label>
+  <div class="gci">
+    <div class="gci-bubble">
+      <div class="gci-line"></div>
+      <div class="gci-line short"></div>
+      <div class="gci-line"></div>
+      <div class="gci-actions">
+        <span class="gci-copy-icon">⧉</span>
+        <span class="gci-callout">← ${esc(mh('copyIconLabel'))}</span>
+      </div>
+    </div>
+    <div class="hint" style="margin-top:8px;">${esc(mh('copyAnswerHint'))}</div>
+  </div>`;
+}
+
 /* ---------------- STATEMENT GENERATOR ---------------- */
 /* ---------------- EXPERIENCE ORDERING (most recent first, automatic) ---------------- */
 function fieldDateScore(month, year){
@@ -913,7 +939,8 @@ function statementGptPanelHTML(){
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Open ChatGPT — your info goes with you</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    ${copyAnswerIllustrationHTML()}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
     <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(3)}"></textarea>
     <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 3: Update my summary</button>
     ${data.statementEdited ? `
