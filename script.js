@@ -1322,7 +1322,7 @@ function showSaveInstructions(blobUrl, filename){
   const warning = document.getElementById("ios-save-inapp-warning");
   if(isInAppBrowser()){
     warning.style.display = "block";
-    warning.innerHTML = "You're viewing this inside Facebook/Instagram, which can block downloads. Tap the <strong>••• or ⋮ menu</strong> at the top of the screen and choose <strong>Open in Browser</strong> (Safari or Chrome), then come back to this page and tap the button below again.";
+    warning.innerHTML = `You're viewing this inside ${appName}, which can block downloads. Tap the <strong>••• or ⋮ menu</strong> at the top of the screen and choose <strong>Open External Browser</strong> (Safari or Chrome), then come back to this page and tap the button below again.`;
   } else {
     warning.style.display = "none";
   }
@@ -1346,7 +1346,7 @@ function closeInappWarning(){
   const appName = getInAppBrowserName();
   if(appName){
     const banner = document.getElementById("inapp-banner");
-    banner.textContent = `WARNING: Download might not work in ${appName}. We recommend using Safari and Chrome instead. Tap ••• button and select open external browser.`;
+    banner.innerHTML = `WARNING: Download might not work in ${appName}. We recommend using Safari and Chrome instead. Tap ••• button and select <strong>Open External Browser</strong>.`;
     banner.style.display = "block";
   }
 }
@@ -1367,7 +1367,7 @@ function showDownloadResult(success){
     `;
   } else {
     content.innerHTML = `
-      <p style="margin:0 0 14px;color:#8A2E1E;background:#FDECEA;border:1px solid #E8B4AB;padding:12px;border-radius:8px;font-size:13px;line-height:1.6;">If download didn't work, please tap the ••• menu → Select "Open external browser"</p>
+      <p style="margin:0 0 14px;color:#8A2E1E;background:#FDECEA;border:1px solid #E8B4AB;padding:12px;border-radius:8px;font-size:13px;line-height:1.6;">If download didn't work, please tap the ••• menu → Select <strong>"Open External Browser"</strong></p>
       <p style="margin:0 0 12px;color:#16233D;font-size:13px;font-weight:600;">To find your Resume:</p>
       <ul style="text-align:left;margin:0 0 16px;padding-left:20px;color:#16233D;font-size:13px;line-height:1.6;">
         <li>Downloads or Files app</li>
