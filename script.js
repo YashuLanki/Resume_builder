@@ -21,8 +21,8 @@ const EN = {
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
-  if(lang==='mh') return 'Copy ta eo ChatGPT ear lewaj \u00f1an yuk, paste ijin, innem jibidre button ne ej ba Step ' + step;
-  return 'Copy what ChatGPT gave you, paste it here, then click the button below';
+  if(lang==='mh') return 'Paste eo an ChatGPT ijin, innem jibidre button eo Step ' + step;
+  return `Paste ChatGPT's answer here, then click the Step ${step} button below`;
 }
 
 
@@ -305,7 +305,7 @@ function experienceHTML(){
           </div>
         </div>
         ` : e.bulletMode==="gpt" ? `
-        <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;display:block;">Step 1: List out what you did</label>
+        <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;display:block;">First, list what you did at this job</label>
         <textarea oninput="updExp(${i},'notes',this.value)" placeholder="FOR EXAMPLE: load bags, helped customers, drove forklift...">${esc(e.notes)}</textarea>
         ${gptPanelHTML(i)}
         ${hasBullets ? `
@@ -346,15 +346,15 @@ function statementHTML(){
     <div class="hint" style="margin-top:4px;line-height:1.6;">
       ${lang==='mh' ? `
         Section in ej ñan paragraph eo jinoin ilo resume in am. Loor e step kein jilu:<br>
-        1. Jibidre <strong>Step 1</strong> – emoj an copy aolep information ko ñan kwe.<br>
-        2. Etal ñan ChatGPT, jibed message box eo, im paste (emoj an makke copy, kajju paste wōt).<br>
-        3. Copy ta eo ChatGPT ej lewaj likiti ilo box ne itulal, innem jibidre <strong>Step 2</strong>.
+        1. Jibidre <strong>Step 1</strong> – ChatGPT enaj peliñi ilo tab ekaal kab information ko am emoj an je ilowaan. Jibidre Send ijeno.<br>
+        2. Ñe ChatGPT ej uwaake, jibed copy icon eo iuñin uwaak eo an.<br>
+        3. Rooltok ijin, paste e ilo box ne, innem jibidre <strong>Step 3</strong>.
       ` : `
         This creates the introduction paragraph at the top of your resume. Here's what to do:
         <div style='margin-top:6px;padding-left:4px;'>
-          <div style='margin-bottom:3px;'>1. Click <strong>Step 1</strong> — it already copied everything for you.</div>
-          <div style='margin-bottom:3px;'>2. Go to ChatGPT, tap the message box, and paste (even if it seems like nothing was copied, just paste).</div>
-          <div>3. Copy what ChatGPT gives back, paste it in the box below, then click <strong>Step 2</strong>.</div>
+          <div style='margin-bottom:3px;'>1. Click <strong>Step 1</strong> — ChatGPT opens with your info already typed in. Tap Send there.</div>
+          <div style='margin-bottom:3px;'>2. When ChatGPT answers, tap the copy icon under its reply.</div>
+          <div>3. Come back here, paste it in the box, then click <strong>Step 3</strong>.</div>
         </div>
       `}
     </div>
@@ -599,12 +599,12 @@ function gptPanelHTML(i){
   const exp = data.experiences[i];
   return `
   <div class="guided-panel" style="margin-top:12px;">
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Paste in ChatGPT</label>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 2: Click here to paste in ChatGPT</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Generate</label>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 1: Open ChatGPT — your info goes with you</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
     <textarea id="gpt-paste-${i}" style="margin-bottom:10px;" placeholder="${pastePlaceholder(3)}"></textarea>
-    <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Click here to generate bullet points</button>
+    <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Generate my bullet points</button>
   </div>`;
 }
 function openAndCopyGpt(i){
@@ -632,12 +632,12 @@ function buildSkillsGptPrompt(){
 function skillsGptPanelHTML(){
   return `
   <div class="guided-panel" style="margin-top:12px;">
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Paste in ChatGPT</label>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 1: Click here to paste ChatGPT</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
-    <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(2)}"></textarea>
-    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 2: Click here to update my skills</button>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 1: Open ChatGPT — your info goes with you</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(3)}"></textarea>
+    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 3: Update my skills</button>
   </div>`;
 }
 function openAndCopySkillsGpt(){
@@ -910,12 +910,12 @@ function buildStatementGptPrompt(d){
 function statementGptPanelHTML(){
   return `
   <div class="guided-panel">
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Paste in ChatGPT</label>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Click here to paste in ChatGPT</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
-    <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(2)}"></textarea>
-    <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 2: Click here update Summary</button>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Open ChatGPT — your info goes with you</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
+    <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(3)}"></textarea>
+    <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 3: Update my summary</button>
     ${data.statementEdited ? `
     <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;text-align:center;">
       <strong style="font-size:14px;color:var(--ok);">✓ DONE!</strong>
