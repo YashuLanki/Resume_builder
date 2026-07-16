@@ -1299,13 +1299,17 @@ async function downloadPDF(){
 function getInAppBrowserName(){
   const ua = navigator.userAgent || "";
 
-  // Facebook: check for FBAV (app version) or FBAN (brand marker)
-  // Both markers indicate Facebook's in-app browser (works on iPhone with Version/ present)
+  // Facebook: check for FBAV (app version), FBAN (brand marker), or FBIOS (Facebook iOS)
+  // All markers indicate Facebook's in-app browser
   if(/FBAV/i.test(ua)) return "Facebook";
   if(/FBAN/i.test(ua)) return "Facebook";
+  if(/FBIOS/i.test(ua)) return "Facebook";
+  if(/\bFacebook\b/i.test(ua)) return "Facebook";
 
-  // Instagram: direct check for Instagram marker (iPhone in-app browser includes this)
+  // Instagram: check for Instagram marker or IGAB (Instagram App Browser)
+  // iPhone in-app browser includes these markers
   if(/Instagram/i.test(ua)) return "Instagram";
+  if(/IGAB/i.test(ua)) return "Instagram";
 
   // Snapchat
   if(/Snapchat/i.test(ua)) return "Snapchat";
@@ -1318,6 +1322,9 @@ function getInAppBrowserName(){
 
   // Messenger
   if(/Messenger/i.test(ua)) return "Messenger";
+
+  // Google Search App
+  if(/GSA/i.test(ua)) return "Google Search App";
 
   return null;
 }
@@ -1357,6 +1364,9 @@ function closeSaveInstructions(){
 
 function showInappWarning(){
   const appName = getInAppBrowserName();
+  // Log for debugging iOS in-app browser detection
+  console.log('Detected in-app browser:', appName);
+  console.log('UA:', navigator.userAgent);
   if(!appName) return;
   const text = document.getElementById("inapp-warning-text");
   text.textContent = `You're using ${appName}. To download your resume, please tap the ••• menu and select "Open external browser"`;
