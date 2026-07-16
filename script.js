@@ -663,7 +663,7 @@ function stripMarkdownLine(line){
 function splitGptLines(text){
   let lines = (text||"")
     .split(/\r?\n/)
-    .map(l => l.replace(/^[\-\*•]\s*/,"").replace(/^\d+[\.\)]\s*/,""))  // strip leading bullet/number marker first
+    .map(l => l.trim().replace(/^[\-\*•]\s*/,"").replace(/^\d+[\.\)]\s*/,""))  // strip leading bullet/number marker first (ChatGPT sometimes indents it)
     .map(l => stripMarkdownLine(l).trim())                              // then strip any remaining markdown emphasis
     .filter(Boolean);
   // Fallback for ChatGPT answers that come back as one paragraph instead of separate lines
