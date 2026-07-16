@@ -1358,9 +1358,9 @@ function showDownloadResult(success){
   if(success){
     content.innerHTML = `
       <p style="margin:0 0 14px;color:#16233D;font-size:15px;font-weight:700;">Downloaded successfully!</p>
-      <p style="margin:0 0 12px;color:#16233D;font-size:13px;font-weight:600;">To find your Resume:</p>
+      <p style="margin:0 0 12px;color:#16233D;font-size:13px;font-weight:600;">To find your Resume, go to:</p>
       <ul style="text-align:left;margin:0 0 16px;padding-left:20px;color:#16233D;font-size:13px;line-height:1.6;">
-        <li>Downloads or Files app</li>
+        <li><strong>Downloaded</strong> or <strong>Files</strong> on your device</li>
         <li>Your browser's downloads</li>
       </ul>
       <button style="border:none;background:#B68D40;color:#fff;font-size:15px;font-weight:700;padding:12px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeDownloadResult()">Got it</button>
@@ -1368,9 +1368,9 @@ function showDownloadResult(success){
   } else {
     content.innerHTML = `
       <p style="margin:0 0 14px;color:#8A2E1E;background:#FDECEA;border:1px solid #E8B4AB;padding:12px;border-radius:8px;font-size:13px;line-height:1.6;">If download didn't work, please tap the ••• menu → Select <strong>"Open External Browser"</strong></p>
-      <p style="margin:0 0 12px;color:#16233D;font-size:13px;font-weight:600;">To find your Resume:</p>
+      <p style="margin:0 0 12px;color:#16233D;font-size:13px;font-weight:600;">To find your Resume, go to:</p>
       <ul style="text-align:left;margin:0 0 16px;padding-left:20px;color:#16233D;font-size:13px;line-height:1.6;">
-        <li>Downloads or Files app</li>
+        <li><strong>Downloaded</strong> or <strong>Files</strong> app</li>
         <li>Your browser's downloads</li>
       </ul>
       <button style="border:none;background:#8A2E1E;color:#fff;font-size:15px;font-weight:700;padding:12px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeDownloadResult()">Got it</button>
