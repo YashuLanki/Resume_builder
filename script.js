@@ -63,8 +63,9 @@ const DEGREE_GROUPS = [
   { label: "High School or GED", options: [
       { value:"Some High School", level:0 },
       { value:"High School Diploma / GED", level:0 },
+      { value:"Some College", level:0 },
   ]},
-  { label: "Associate's & Certificates", options: [
+  { label: "Associate's Degrees", options: [
       { value:"Associate of Arts (AA)", level:0 },
       { value:"Associate of Science (AS)", level:0 },
       { value:"Associate of Applied Science (AAS)", level:0 },
