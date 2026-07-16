@@ -1,5 +1,6 @@
 /* ---------------- STATE ---------------- */
 let lang = 'en'; // 'en' = English (default), 'mh' = Marshallese
+let preventUnloadUntil = 0; // prevent page unload until this timestamp
 
 const MH = {
   brandbarHint: "Kanne tab 1-5. Bōk e PDF eo am ilo tab eo eliktata. Resume in ej limit i yuk ñan 1 wōt peij.",
@@ -703,6 +704,7 @@ function cleanCertPhrase(v){
 }
 
 function insertGptSkills(){
+  preventUnloadUntil = Date.now() + 5000; // prevent unload for 5 seconds
   const ta = document.getElementById("skills-gpt-paste");
   const raw = ta ? ta.value : "";
   if(!raw.trim()){
@@ -799,6 +801,7 @@ function toggleJobCard(i){
 }
 
 function insertGptBullets(i){
+  preventUnloadUntil = Date.now() + 5000; // prevent unload for 5 seconds
   const ta = document.getElementById(`gpt-paste-${i}`);
   const lines = splitGptLines(ta ? ta.value : "");
   if(!lines.length){
@@ -954,6 +957,7 @@ function openAndCopyStatementGpt(){
   openChatGptWithPrompt(buildStatementGptPrompt(data), "statement-gpt-status");
 }
 function insertGptStatement(){
+  preventUnloadUntil = Date.now() + 5000; // prevent unload for 5 seconds
   const ta = document.getElementById("statement-gpt-paste");
   const raw = ta ? ta.value : "";
   if(!raw.trim()){
@@ -1502,3 +1506,12 @@ expandedJobs.add(0); // start with job 0 open
 renderForm();
 setMobileView("form");
 showInappWarning(); // warn if in in-app browser
+
+// Prevent page unload when ads try to redirect (e.g., ChatGPT ads on mobile)
+window.addEventListener('beforeunload', (e) => {
+  if (Date.now() < preventUnloadUntil) {
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
