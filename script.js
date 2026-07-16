@@ -49,11 +49,10 @@ let skillsGptOpen = false; // whether the Skills-tab ChatGPT helper panel is ope
 let statementGptOpen = false; // whether the Professional Statement ChatGPT helper panel is open
 let expandedJobs = new Set(); // indices of job cards currently expanded
 let expandedEdus = new Set(); // indices of education cards currently expanded
-let skillsDone = false; // whether skills step 3 has been completed
-let expandedSkillsEdit = false; // whether the skills card is manually expanded after Done
+let skillsDone = false; // whether the skills section has been marked done (manually, or via ChatGPT)
 
 function newExp(){
-  return { id: Math.random().toString(36).slice(2), title:"", company:"", city:"", state:"", startMonth:"", startYear:"", endMonth:"", endYear:"", current:false, notes:"", bullets:[""] };
+  return { id: Math.random().toString(36).slice(2), title:"", company:"", city:"", state:"", startMonth:"", startYear:"", endMonth:"", endYear:"", current:false, notes:"", bullets:[""], bulletMode:"" };
 }
 function newEdu(){
   return { id: Math.random().toString(36).slice(2), degreeType:"", program:"", school:"", city:"", state:"", startMonth:"", startYear:"", endMonth:"", endYear:"", current:false, gradYear:"", detail:"" };
@@ -131,7 +130,10 @@ function stateOptionsHTML(selected){
 }
 
 const CURRENT_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = (()=>{ const arr=[]; for(let y=CURRENT_YEAR+10; y>=1950; y--) arr.push(y); return arr; })();
+// Actual dates (jobs, school attended) only ever land in the past or present — no future years.
+const YEAR_OPTIONS = (()=>{ const arr=[]; for(let y=CURRENT_YEAR; y>=1950; y--) arr.push(y); return arr; })();
+// Expected graduation year is the one date that's legitimately in the future, within a reasonable window.
+const GRAD_YEAR_OPTIONS = (()=>{ const arr=[]; for(let y=CURRENT_YEAR+6; y>=CURRENT_YEAR; y--) arr.push(y); return arr; })();
 function monthOptionsHTML(selected){
   let html = `<option value="">Month</option>`;
   MONTH_LABELS.forEach(m=>{ html += `<option value="${m}" ${selected===m ? "selected" : ""}>${m}</option>`; });
@@ -140,6 +142,11 @@ function monthOptionsHTML(selected){
 function yearOptionsHTML(selected){
   let html = `<option value="">Year</option>`;
   YEAR_OPTIONS.forEach(y=>{ html += `<option value="${y}" ${String(selected)===String(y) ? "selected" : ""}>${y}</option>`; });
+  return html;
+}
+function gradYearOptionsHTML(selected){
+  let html = `<option value="">Year</option>`;
+  GRAD_YEAR_OPTIONS.forEach(y=>{ html += `<option value="${y}" ${String(selected)===String(y) ? "selected" : ""}>${y}</option>`; });
   return html;
 }
 function formatDatePair(month, year){
@@ -178,7 +185,6 @@ function goStep(step){
   currentStep = step;
   skillsGptOpen = false;
   statementGptOpen = false;
-  expandedSkillsEdit = false;
   document.querySelectorAll(".step-btn").forEach(b=>{
     b.classList.toggle("active", b.dataset.step===step);
   });
@@ -283,6 +289,15 @@ function experienceHTML(){
         <label style="font-size:12px;display:flex;gap:6px;align-items:center;margin-bottom:10px;color:var(--navy);font-weight:600;">
           <input type="checkbox" ${e.current?'checked':''} onchange="toggleCurrent(${i}, this.checked)" style="width:auto;"> I currently work here
         </label>
+        ${!e.bulletMode ? `
+        <div style="margin-top:6px;">
+          <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:8px;">How do you want to write your bullet points?</label>
+          <div style="display:flex;gap:8px;">
+            <button class="gold-btn" style="flex:1;" onclick="setBulletMode(${i},'gpt')">Get help from ChatGPT</button>
+            <button class="ghost-btn" style="flex:1;margin-top:0;" onclick="setBulletMode(${i},'manual')">I'll write them myself</button>
+          </div>
+        </div>
+        ` : e.bulletMode==="gpt" ? `
         <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;display:block;">Step 1: List out what you did</label>
         <textarea oninput="updExp(${i},'notes',this.value)" placeholder="FOR EXAMPLE: load bags, helped customers, drove forklift...">${esc(e.notes)}</textarea>
         ${gptPanelHTML(i)}
@@ -297,7 +312,19 @@ function experienceHTML(){
             <textarea oninput="updBullet(${i},${bi},this.value)">${esc(b)}</textarea>
             <button class="icon-btn danger" onclick="removeBullet(${i},${bi})" title="Remove bullet">✕</button>
           </div>`).join("")}
+        <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addBullet(${i})">+ Add bullet point</button>
         ` : ""}
+        <button class="small-link" style="margin-top:12px;display:block;" onclick="setBulletMode(${i},'manual')">Prefer to just type your bullet points? Switch to manual entry</button>
+        ` : `
+        <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;margin-bottom:8px;display:block;">Your bullet points</label>
+        ${e.bullets.map((b,bi)=>`
+          <div class="bullet-row">
+            <textarea oninput="updBullet(${i},${bi},this.value)" placeholder="FOR EXAMPLE: Loaded and unloaded delivery trucks daily">${esc(b)}</textarea>
+            <button class="icon-btn danger" onclick="removeBullet(${i},${bi})" title="Remove bullet">✕</button>
+          </div>`).join("")}
+        <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addBullet(${i})">+ Add bullet point</button>
+        <button class="small-link" style="margin-top:12px;display:block;" onclick="setBulletMode(${i},'gpt')">Prefer ChatGPT's help instead? Switch</button>
+        `}
         ${exps.length>1 ? `<button class="remove-exp" onclick="removeExp(${i})">Remove this job</button>` : ""}
       </div>
     </div>`;
@@ -328,6 +355,11 @@ function statementHTML(){
   <div class="statement-box">
     ${statementGptPanelHTML()}
   </div>
+  <div class="field" style="margin-top:16px;">
+    <label>Prefer to write or tweak it yourself? Edit it directly</label>
+    <textarea style="min-height:90px;" oninput="onStatementEdit(this.value)" placeholder="Write your own summary here...">${esc(data.statementEdited ? data.statement : buildStatement(data))}</textarea>
+    <p class="hint">This box is always what shows up on your resume — feel free to edit it any time.</p>
+  </div>
   ${lang==='mh' ? `<div style="margin-top:16px;margin-bottom:10px;text-align:center;font-size:12.5px;color:var(--navy);font-weight:600;">Jibed button eo ilal ñan am maroñ in bōk resume eo am.</div>` : ''}
   <button class="gold-btn" id="download-btn" style="width:100%;margin-top:18px;font-size:16px;font-weight:800;padding:16px 0;letter-spacing:0.3px;" onclick="downloadPDF()">⬇ Download PDF</button>
   <div style="margin-top:16px;text-align:center;font-size:13px;color:var(--muted);line-height:1.6;">
@@ -341,7 +373,6 @@ function educationHTML(){
   let html = `<div style="margin-bottom:8px;"><strong style="font-size:13px;color:var(--navy);">Education</strong>
     <div class="hint" style="margin-top:2px;">${lang==='mh' ? 'Section in enij walok elikin jerbal ko am ilo resume in. Jolok elañe kwojjab kōnan likiti.' : 'This section is optional. Delete all entries to remove it from your resume.'}</div></div>`;
   edus.forEach((ed,i)=>{
-    const level = eduLevelFromType(ed.degreeType);
     const hasDegree = ed.degreeType || ed.school;
     const isOpen = expandedEdus.has(i) || !hasDegree;
     const summary = [ed.degreeType, ed.school].filter(Boolean).join(" — ") || `School ${i+1}`;
@@ -355,10 +386,9 @@ function educationHTML(){
         <div class="field"><label>Degree level</label>
           ${degreeSelectHTML(i, ed.degreeType)}
         </div>
-        ${level>=1 ? `
-        <div class="field"><label>Program / major</label>
+        <div class="field"><label>What was/is your degree or program in? (optional)</label>
           <input type="text" value="${esc(ed.program)}" oninput="updEdu(${i},'program',this.value)" placeholder="FOR EXAMPLE: Business Administration">
-        </div>` : ""}
+        </div>
         <div class="field"><label>School</label>
           <input type="text" value="${esc(ed.school)}" oninput="updEdu(${i},'school',this.value)" placeholder="School name">
         </div>
@@ -392,7 +422,7 @@ function educationHTML(){
         ${ed.current ? `
         <div class="field">
           <label>Expected graduation year</label>
-          <select onchange="updEdu(${i},'gradYear',this.value)">${yearOptionsHTML(ed.gradYear)}</select>
+          <select onchange="updEdu(${i},'gradYear',this.value)">${gradYearOptionsHTML(ed.gradYear)}</select>
         </div>
         ` : ""}
         <div class="field">
@@ -429,7 +459,6 @@ function removeEdu(i){
 }
 
 function skillsHTML(){
-  const step1Open = !skillsDone || expandedSkillsEdit;
   return `
     <div class="field">
       <label>Add a Language</label>
@@ -450,22 +479,30 @@ function skillsHTML(){
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addCert()">+ Add certification</button>
     </div>
     <div class="field" style="margin-top:6px;">
-      <div class="card-head" onclick="toggleSkillsEdit()" style="margin-bottom:6px;">
-        <label style="font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;margin:0;">
-          Step 1: List skills here${skillsDone ? " (Tap to edit)" : ""}
-        </label>
-        <span class="chev ${step1Open ? "open" : ""}">▼</span>
+      <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Other skills</label>
+      ${data.otherSkills.map((s,i)=>`
+        <div class="bullet-row">
+          <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="FOR EXAMPLE: customer service, teamwork, hard worker">
+          ${data.otherSkills.length>1 ? `<button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>` : ""}
+        </div>`).join("")}
+      <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill line</button>
+      <p class="hint">${lang==='mh' ? 'Kajjojo lain ej erom bullet eo an make – kōmman bwe en pidodo, einwot &quot;good with customers&quot; or &quot;fast learner.&quot;' : 'Each line becomes its own bullet — keep each one simple, like &quot;good with customers&quot; or &quot;fast learner.&quot;'}</p>
+
+      ${!skillsGptOpen ? `
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="gold-btn" style="flex:1;" onclick="openSkillsGpt()">Polish with ChatGPT (optional)</button>
+        <button class="solid-btn" style="flex:1;" onclick="markSkillsDone()">✓ I'm done — use these</button>
       </div>
-      <div class="card-body ${step1Open ? "expanded" : "collapsed"}">
-        ${data.otherSkills.map((s,i)=>`
-          <div class="bullet-row">
-            <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="FOR EXAMPLE: customer service, teamwork, hard worker">
-            ${data.otherSkills.length>1 ? `<button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>` : ""}
-          </div>`).join("")}
-        <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill line</button>
-        <p class="hint">${lang==='mh' ? 'Kajjojo lain ej erom bullet eo an make – kōmman bwe en pidodo, einwot &quot;good with customers&quot; or &quot;fast learner.&quot;' : 'Each line becomes its own bullet — keep each one simple, like &quot;good with customers&quot; or &quot;fast learner.&quot;'}</p>
-      </div>
+      ` : `
       ${skillsGptPanelHTML()}
+      <button class="small-link" style="margin-top:10px;display:block;" onclick="closeSkillsGpt()">Hide ChatGPT helper</button>
+      `}
+      ${skillsDone ? `
+      <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;">
+        <strong style="font-size:14px;color:var(--ok);">✓ Done!</strong>
+        <div style="font-size:12px;color:#333;margin-top:4px;">Tap <strong>Summary</strong> tab to continue.</div>
+      </div>
+      ` : ""}
     </div>
   `;
 }
@@ -489,6 +526,8 @@ function updExp(i,field,val){ data.experiences[i][field]=val; if(currentStep==="
 function toggleCurrent(i,checked){ data.experiences[i].current=checked; renderForm(); }
 function updBullet(i,bi,val){ data.experiences[i].bullets[bi]=val; if(!data.statementEdited) refreshStatementBoxOnly(); renderPreview(); }
 function removeBullet(i,bi){ data.experiences[i].bullets.splice(bi,1); renderForm(); }
+function addBullet(i){ data.experiences[i].bullets.push(""); renderForm(); }
+function setBulletMode(i,mode){ data.experiences[i].bulletMode = mode; renderForm(); }
 
 /* ---- Bullet writing help: simplified ChatGPT flow (one box, 5 bullets) ---- */
 function buildGptPrompt(exp){
@@ -565,18 +604,12 @@ function skillsGptPanelHTML(){
   return `
   <div class="guided-panel" style="margin-top:12px;">
     <textarea id="skills-gpt-prompt" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" tabindex="-1" aria-hidden="true">${esc(prompt)}</textarea>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Paste in ChatGPT</label>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Paste in ChatGPT</label>
     <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}</div>
-    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 2: Click here to paste ChatGPT</button>
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Generate</label>
-    <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(3)}"></textarea>
-    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 3: Click here to update my skills</button>
-    ${skillsDone ? `
-    <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;">
-      <strong style="font-size:14px;color:var(--ok);">✓ Done!</strong>
-      <div style="font-size:12px;color:#333;margin-top:4px;">Tap <strong>Summary</strong> tab to continue.</div>
-    </div>
-    ` : ""}
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 1: Click here to paste ChatGPT</button>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
+    <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(2)}"></textarea>
+    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 2: Click here to update my skills</button>
   </div>`;
 }
 function openAndCopySkillsGpt(){
@@ -677,7 +710,9 @@ function insertGptSkills(){
     leftoverLines.push(line);
   });
 
-  const phrases = splitGptLines(leftoverLines.join("\n"));
+  // The prompt asks ChatGPT to pipe-separate multiple skills within one bullet line
+  // (e.g. "teamwork | fast learner"), so split those back out into separate skills.
+  const phrases = splitGptLines(leftoverLines.join("\n")).flatMap(p=>p.split("|")).map(p=>p.trim()).filter(Boolean);
   const otherPhrases = [];
   phrases.forEach(phrase=>{
     if(!langVals.length && /bilingual|language/i.test(phrase)){
@@ -691,18 +726,30 @@ function insertGptSkills(){
     otherPhrases.push(phrase);
   });
 
-  if(langVals.length) data.languages = langVals;
-  if(certVals.length) data.certifications = certVals;
-  data.otherSkills = otherPhrases.length ? otherPhrases : [""];
+  // Merge with what's already there instead of replacing it outright — otherwise anything
+  // typed in manually after a previous ChatGPT round-trip (like a newly added certification)
+  // gets silently wiped out if this response doesn't happen to mention it too.
+  const mergeUnique = (existing, incoming)=> Array.from(new Set([...existing.filter(v=>v.trim()), ...incoming]));
+  if(langVals.length) data.languages = mergeUnique(data.languages, langVals);
+  if(certVals.length) data.certifications = mergeUnique(data.certifications, certVals);
+  if(otherPhrases.length) data.otherSkills = mergeUnique(data.otherSkills, otherPhrases);
 
   skillsDone = true;
-  expandedSkillsEdit = false; // auto-collapse Step 1
   skillsGptOpen = false;
   renderForm();
 }
 
-function toggleSkillsEdit(){
-  expandedSkillsEdit = !expandedSkillsEdit;
+function openSkillsGpt(){
+  skillsGptOpen = true;
+  renderForm();
+}
+function closeSkillsGpt(){
+  skillsGptOpen = false;
+  renderForm();
+}
+function markSkillsDone(){
+  skillsDone = true;
+  skillsGptOpen = false;
   renderForm();
 }
 
@@ -786,8 +833,7 @@ function sortedExperiences(d){
 /* ---- Education level detection: only bachelor's degrees and above qualify for the statement ---- */
 function eduDisplayDegree(ed){
   if(!ed.degreeType) return "";
-  const level = eduLevelFromType(ed.degreeType);
-  if(level>=1 && ed.program && ed.program.trim()){
+  if(ed.program && ed.program.trim()){
     return `${ed.degreeType}, ${ed.program.trim()}`;
   }
   return ed.degreeType;
