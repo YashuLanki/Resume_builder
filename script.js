@@ -291,8 +291,7 @@ function experienceHTML(){
           <input type="checkbox" ${e.current?'checked':''} onchange="toggleCurrent(${i}, this.checked)" style="width:auto;"> I currently work here
         </label>
         <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px;">
-          <strong style="font-size:14px;color:var(--navy);display:block;">Describe what you did</strong>
-          <div class="hint" style="margin-top:2px;margin-bottom:10px;">List out what you did here.</div>
+          <strong style="font-size:14px;color:var(--navy);display:block;margin-bottom:10px;">List and describe what you did for Job ${i+1}</strong>
         </div>
         ${!e.bulletMode ? `
         <div style="margin-top:6px;">
@@ -485,8 +484,7 @@ function skillsHTML(){
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addCert()">+ Add certification</button>
     </div>
     <div style="border-top:1px solid var(--line);margin:14px 0 14px;padding-top:14px;">
-      <strong style="font-size:14px;color:var(--navy);display:block;">General skills</strong>
-      <div class="hint" style="margin-top:2px;">List your skills here.</div>
+      <strong style="font-size:14px;color:var(--navy);display:block;">List your general skills here</strong>
     </div>
     <div class="field" style="margin-top:6px;">
       ${!skillsInputMode ? `
