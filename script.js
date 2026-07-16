@@ -4,7 +4,6 @@ let lang = 'en'; // 'en' = English (default), 'mh' = Marshallese
 const MH = {
   brandbarHint: "Kanne tab 1-5. Bōk e PDF eo am ilo tab eo eliktata. Resume in ej limit i yuk ñan 1 wōt peij.",
   expHint: "Likit jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj makke kwalok jerbal eo ekaal mokta ekkar ñan iio.",
-  alreadyCopied: "(Em\u014dj an copy - kajju paste w\u014dt ilo ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
@@ -14,7 +13,6 @@ const MH = {
 const EN = {
   brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
   expHint: "Add up to 3 jobs in any order. Your resume will automatically list the most recent first.",
-  alreadyCopied: "(Already copied \u2014 just paste it in ChatGPT)",
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
@@ -599,11 +597,10 @@ function buildGptPrompt(exp){
 }
 function gptPanelHTML(i){
   const exp = data.experiences[i];
-  const prompt = buildGptPrompt(exp);
   return `
   <div class="guided-panel" style="margin-top:12px;">
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Paste in ChatGPT</label>
-    <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}\n</div>
+    <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 2: Click here to paste in ChatGPT</button>
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 3: Generate</label>
     <textarea id="gpt-paste-${i}" style="margin-bottom:10px;" placeholder="${pastePlaceholder(3)}"></textarea>
@@ -633,11 +630,10 @@ function buildSkillsGptPrompt(){
   return p;
 }
 function skillsGptPanelHTML(){
-  const prompt = buildSkillsGptPrompt();
   return `
   <div class="guided-panel" style="margin-top:12px;">
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Paste in ChatGPT</label>
-    <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}</div>
+    <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 1: Click here to paste ChatGPT</button>
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
     <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(2)}"></textarea>
@@ -912,11 +908,10 @@ function buildStatementGptPrompt(d){
   return p;
 }
 function statementGptPanelHTML(){
-  const prompt = buildStatementGptPrompt(data);
   return `
   <div class="guided-panel">
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Paste in ChatGPT</label>
-    <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;">${mh('alreadyCopied')}</div>
+    <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Click here to paste in ChatGPT</button>
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:28px;margin-bottom:6px;">Step 2: Generate</label>
     <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(2)}"></textarea>
