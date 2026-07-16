@@ -744,7 +744,19 @@ function insertGptSkills(){
   // Merge with what's already there instead of replacing it outright — otherwise anything
   // typed in manually after a previous ChatGPT round-trip (like a newly added certification)
   // gets silently wiped out if this response doesn't happen to mention it too.
-  const mergeUnique = (existing, incoming)=> Array.from(new Set([...existing.filter(v=>v.trim()), ...incoming]));
+  // Case-insensitive dedup: "teamwork" and "Teamwork" are treated as the same skill.
+  const mergeUnique = (existing, incoming)=> {
+    const seen = new Set();
+    const result = [];
+    [...existing.filter(v=>v.trim()), ...incoming].forEach(v => {
+      const lower = v.toLowerCase();
+      if (!seen.has(lower)) {
+        seen.add(lower);
+        result.push(v);
+      }
+    });
+    return result;
+  };
   if(langVals.length) data.languages = mergeUnique(data.languages, langVals);
   if(certVals.length) data.certifications = mergeUnique(data.certifications, certVals);
   if(otherPhrases.length) data.otherSkills = mergeUnique(data.otherSkills, otherPhrases);
