@@ -12,6 +12,7 @@ const MH = {
   copyAnswerTitle: "Step 2: Copy ChatGPT's answer",
   copyIconLabel: "Tap this copy icon under ChatGPT's reply",
   copyAnswerHint: "When ChatGPT answers, look under its reply for the copy icon, tap it, then come back to this page.",
+  pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 const EN = {
   brandbarHint: "Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.\n",
@@ -24,6 +25,7 @@ const EN = {
   copyAnswerTitle: "Step 2: Copy ChatGPT's answer",
   copyIconLabel: "Tap this copy icon under ChatGPT's reply",
   copyAnswerHint: "When ChatGPT answers, look under its reply for the copy icon, tap it, then come back to this page.",
+  pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
@@ -587,6 +589,12 @@ function legacyCopy(text, onOk, onFail){
   try{ document.execCommand('copy'); onOk(); }catch(e){ onFail(); }
   document.body.removeChild(ta);
 }
+function markPasted(feedbackId){
+  setTimeout(()=>{
+    const el = document.getElementById(feedbackId);
+    if(el) el.textContent = mh('pasteGotIt');
+  }, 50);
+}
 
 /* ---- Bullet writing help: simplified ChatGPT flow (one box, 5 bullets) ---- */
 function buildGptPrompt(exp){
@@ -610,7 +618,8 @@ function gptPanelHTML(i){
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Step 1: Open ChatGPT — your info goes with you</button>
     ${copyAnswerIllustrationHTML()}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
-    <textarea id="gpt-paste-${i}" style="margin-bottom:10px;" placeholder="${pastePlaceholder(3)}"></textarea>
+    <textarea id="gpt-paste-${i}" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('gpt-paste-fb-${i}')"></textarea>
+    <div class="hint" id="gpt-paste-fb-${i}" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
     <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Generate my bullet points</button>
   </div>`;
 }
@@ -644,7 +653,8 @@ function skillsGptPanelHTML(){
     <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Step 1: Open ChatGPT — your info goes with you</button>
     ${copyAnswerIllustrationHTML()}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
-    <textarea id="skills-gpt-paste" style="margin-bottom:6px;" placeholder="${pastePlaceholder(3)}"></textarea>
+    <textarea id="skills-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('skills-gpt-paste-fb')"></textarea>
+    <div class="hint" id="skills-gpt-paste-fb" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
     <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 3: Update my skills</button>
   </div>`;
 }
@@ -941,7 +951,8 @@ function statementGptPanelHTML(){
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Step 1: Open ChatGPT — your info goes with you</button>
     ${copyAnswerIllustrationHTML()}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
-    <textarea id="statement-gpt-paste" placeholder="${pastePlaceholder(3)}"></textarea>
+    <textarea id="statement-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('statement-gpt-paste-fb')"></textarea>
+    <div class="hint" id="statement-gpt-paste-fb" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
     <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 3: Update my summary</button>
     ${data.statementEdited ? `
     <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;text-align:center;">
