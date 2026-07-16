@@ -1294,12 +1294,27 @@ async function downloadPDF(){
 // are known to block or silently fail blob/file downloads.
 function getInAppBrowserName(){
   const ua = navigator.userAgent || "";
-  if(/FBAN|FBAV/i.test(ua)) return "Facebook";
+
+  // Facebook: check for FBAV (app version) or FBAN (brand marker)
+  // Both markers indicate Facebook's in-app browser (works on iPhone with Version/ present)
+  if(/FBAV/i.test(ua)) return "Facebook";
+  if(/FBAN/i.test(ua)) return "Facebook";
+
+  // Instagram: direct check for Instagram marker (iPhone in-app browser includes this)
   if(/Instagram/i.test(ua)) return "Instagram";
+
+  // Snapchat
   if(/Snapchat/i.test(ua)) return "Snapchat";
+
+  // WhatsApp
   if(/WhatsApp/i.test(ua)) return "WhatsApp";
+
+  // TikTok
   if(/TikTok/i.test(ua)) return "TikTok";
+
+  // Messenger
   if(/Messenger/i.test(ua)) return "Messenger";
+
   return null;
 }
 
