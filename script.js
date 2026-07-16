@@ -221,6 +221,7 @@ function renderForm(){
   else if(currentStep==="skills") root.innerHTML = skillsHTML();
   else root.innerHTML = statementHTML();
   renderPreview();
+  saveState();
 }
 
 function personalHTML(){
@@ -559,10 +560,14 @@ function setBulletMode(i,mode){ data.experiences[i].bulletMode = mode; renderFor
 function openChatGptWithPrompt(prompt, statusElId){
   const status = document.getElementById(statusElId);
   const url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
-  const win = window.open(url, '_blank');
-  if(win){
-    if(status) status.textContent = mh('gptOpened');
-    return;
+  // In in-app browsers, window.open can trigger a page reload that wipes the
+  // user's progress — skip it and go straight to the clipboard fallback.
+  if(!isInAppBrowser()){
+    const win = window.open(url, '_blank');
+    if(win){
+      if(status) status.textContent = mh('gptOpened');
+      return;
+    }
   }
   // Popup blocked (common in in-app browsers) — fall back to copying the prompt.
   copyTextToClipboard(prompt,
@@ -1348,6 +1353,7 @@ function isExternalBrowser(){
 
 let lastSaveBlobUrl = null;
 function showSaveInstructions(blobUrl, filename){
+  const appName = getInAppBrowserName();
   if(lastSaveBlobUrl) URL.revokeObjectURL(lastSaveBlobUrl);
   lastSaveBlobUrl = blobUrl;
 
@@ -1378,6 +1384,7 @@ function showInappWarning(){
   console.log('UA:', navigator.userAgent);
   if(!appName) return;
   const text = document.getElementById("inapp-warning-text");
+  if(!text) return;
   text.textContent = `You're using ${appName}. To download your resume, please tap the ••• menu and select "Open external browser"`;
   document.getElementById("inapp-warning-modal").style.display = "flex";
 }
@@ -1520,8 +1527,46 @@ function trackDownload(success, timeSpentSeconds, currentStep) {
 // Track app open on page load
 trackAppOpen();
 
+/* ---------------- STATE PERSISTENCE (survives in-app browser reloads) ---------------- */
+function saveState(){
+  const state = {
+    data: data,
+    currentStep: currentStep,
+    skillsInputMode: skillsInputMode,
+    skillsDone: skillsDone,
+    statementGptOpen: statementGptOpen,
+    lang: lang,
+    expandedJobs: Array.from(expandedJobs),
+    doneBulletJobs: Array.from(doneBulletJobs),
+    expandedEdus: Array.from(expandedEdus)
+  };
+  sessionStorage.setItem('resumeBuilderState', JSON.stringify(state));
+}
+
+function restoreState(){
+  const saved = sessionStorage.getItem('resumeBuilderState');
+  if(!saved) return;
+  try {
+    const state = JSON.parse(saved);
+    data = state.data;
+    currentStep = state.currentStep;
+    skillsInputMode = state.skillsInputMode;
+    skillsDone = state.skillsDone;
+    statementGptOpen = state.statementGptOpen;
+    lang = state.lang;
+    expandedJobs = new Set(state.expandedJobs);
+    doneBulletJobs = new Set(state.doneBulletJobs);
+    expandedEdus = new Set(state.expandedEdus);
+  } catch(e) {}
+}
+
 /* ---------------- INIT ---------------- */
 expandedJobs.add(0); // start with job 0 open
+restoreState();
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden) saveState();
+});
+window.addEventListener('pagehide', saveState);
 renderForm();
 setMobileView("form");
 showInappWarning(); // warn if in in-app browser
