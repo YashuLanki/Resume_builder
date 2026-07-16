@@ -704,7 +704,7 @@ function cleanCertPhrase(v){
 }
 
 function insertGptSkills(){
-  preventUnloadUntil = Date.now() + 5000; // prevent unload for 5 seconds
+  preventUnloadUntil = Date.now() + 10000; // prevent unload for 10 seconds
   const ta = document.getElementById("skills-gpt-paste");
   const raw = ta ? ta.value : "";
   if(!raw.trim()){
@@ -801,7 +801,7 @@ function toggleJobCard(i){
 }
 
 function insertGptBullets(i){
-  preventUnloadUntil = Date.now() + 5000; // prevent unload for 5 seconds
+  preventUnloadUntil = Date.now() + 10000; // prevent unload for 10 seconds
   const ta = document.getElementById(`gpt-paste-${i}`);
   const lines = splitGptLines(ta ? ta.value : "");
   if(!lines.length){
@@ -957,7 +957,7 @@ function openAndCopyStatementGpt(){
   openChatGptWithPrompt(buildStatementGptPrompt(data), "statement-gpt-status");
 }
 function insertGptStatement(){
-  preventUnloadUntil = Date.now() + 5000; // prevent unload for 5 seconds
+  preventUnloadUntil = Date.now() + 10000; // prevent unload for 10 seconds
   const ta = document.getElementById("statement-gpt-paste");
   const raw = ta ? ta.value : "";
   if(!raw.trim()){
@@ -1326,6 +1326,15 @@ function getInAppBrowserName(){
   // Google Search App
   if(/GSA/i.test(ua)) return "Google Search App";
 
+  // Fallback: iPhone/iPad without Safari/ identifier is likely an in-app browser
+  // Real Safari includes "Safari/" in the UA, but in-app browsers often strip it
+  if(/iPhone|iPad/i.test(ua) && !/Safari\//i.test(ua)) {
+    // Also check for Mobile/ which indicates a mobile device
+    if(/Mobile\//i.test(ua)) {
+      return "In-App Browser";
+    }
+  }
+
   return null;
 }
 
@@ -1518,7 +1527,10 @@ setMobileView("form");
 showInappWarning(); // warn if in in-app browser
 
 // Prevent page unload when ads try to redirect (e.g., ChatGPT ads on mobile)
+// Also protect for 10 seconds after link clicks or button interactions that might trigger unload
 window.addEventListener('beforeunload', (e) => {
+  // Set protection for 10 seconds on unload attempt
+  preventUnloadUntil = Math.max(preventUnloadUntil, Date.now() + 10000);
   if (Date.now() < preventUnloadUntil) {
     e.preventDefault();
     e.returnValue = '';
