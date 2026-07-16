@@ -45,11 +45,11 @@ let data = {
   otherSkills:["",""]
 };
 let currentStep = "personal";
-let skillsGptOpen = false; // whether the Skills-tab ChatGPT helper panel is open
+let skillsInputMode = ""; // "" | "gpt" | "manual" — how the user chose to fill in Other skills
 let statementGptOpen = false; // whether the Professional Statement ChatGPT helper panel is open
 let expandedJobs = new Set(); // indices of job cards currently expanded
 let expandedEdus = new Set(); // indices of education cards currently expanded
-let skillsDone = false; // whether the skills section has been marked done (manually, or via ChatGPT)
+let skillsDone = false; // whether the skills ChatGPT round-trip has completed at least once
 
 function newExp(){
   return { id: Math.random().toString(36).slice(2), title:"", company:"", city:"", state:"", startMonth:"", startYear:"", endMonth:"", endYear:"", current:false, notes:"", bullets:[""], bulletMode:"" };
@@ -182,8 +182,8 @@ function updateStepChecks(){
 
 /* ---------------- NAV ---------------- */
 function goStep(step){
+  if(currentStep==="skills" && step!=="skills") padSkillsToFive();
   currentStep = step;
-  skillsGptOpen = false;
   statementGptOpen = false;
   document.querySelectorAll(".step-btn").forEach(b=>{
     b.classList.toggle("active", b.dataset.step===step);
@@ -355,11 +355,13 @@ function statementHTML(){
   <div class="statement-box">
     ${statementGptPanelHTML()}
   </div>
+  ${data.statementEdited ? `
   <div class="field" style="margin-top:16px;">
-    <label>Prefer to write or tweak it yourself? Edit it directly</label>
-    <textarea style="min-height:90px;" oninput="onStatementEdit(this.value)" placeholder="Write your own summary here...">${esc(data.statementEdited ? data.statement : buildStatement(data))}</textarea>
-    <p class="hint">This box is always what shows up on your resume — feel free to edit it any time.</p>
+    <label>Want to tweak it? Edit your summary directly</label>
+    <textarea style="min-height:90px;" oninput="onStatementEdit(this.value)">${esc(data.statement)}</textarea>
+    <p class="hint">This box is what shows up on your resume — feel free to edit it any time.</p>
   </div>
+  ` : ""}
   ${lang==='mh' ? `<div style="margin-top:16px;margin-bottom:10px;text-align:center;font-size:12.5px;color:var(--navy);font-weight:600;">Jibed button eo ilal ñan am maroñ in bōk resume eo am.</div>` : ''}
   <button class="gold-btn" id="download-btn" style="width:100%;margin-top:18px;font-size:16px;font-weight:800;padding:16px 0;letter-spacing:0.3px;" onclick="downloadPDF()">⬇ Download PDF</button>
   <div style="margin-top:16px;text-align:center;font-size:13px;color:var(--muted);line-height:1.6;">
@@ -479,30 +481,38 @@ function skillsHTML(){
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addCert()">+ Add certification</button>
     </div>
     <div class="field" style="margin-top:6px;">
-      <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Other skills</label>
-      ${data.otherSkills.map((s,i)=>`
-        <div class="bullet-row">
-          <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="FOR EXAMPLE: customer service, teamwork, hard worker">
-          ${data.otherSkills.length>1 ? `<button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>` : ""}
-        </div>`).join("")}
-      <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill line</button>
-      <p class="hint">${lang==='mh' ? 'Kajjojo lain ej erom bullet eo an make – kōmman bwe en pidodo, einwot &quot;good with customers&quot; or &quot;fast learner.&quot;' : 'Each line becomes its own bullet — keep each one simple, like &quot;good with customers&quot; or &quot;fast learner.&quot;'}</p>
-
-      ${!skillsGptOpen ? `
-      <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="gold-btn" style="flex:1;" onclick="openSkillsGpt()">Polish with ChatGPT (optional)</button>
-        <button class="solid-btn" style="flex:1;" onclick="markSkillsDone()">✓ I'm done — use these</button>
+      <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:8px;">Other skills</label>
+      ${!skillsInputMode ? `
+      <div style="display:flex;gap:8px;">
+        <button class="gold-btn" style="flex:1;" onclick="setSkillsMode('gpt')">Get help from ChatGPT</button>
+        <button class="ghost-btn" style="flex:1;margin-top:0;" onclick="setSkillsMode('manual')">I'll write them myself</button>
       </div>
-      ` : `
+      ` : skillsInputMode==="gpt" ? `
       ${skillsGptPanelHTML()}
-      <button class="small-link" style="margin-top:10px;display:block;" onclick="closeSkillsGpt()">Hide ChatGPT helper</button>
-      `}
       ${skillsDone ? `
       <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;">
         <strong style="font-size:14px;color:var(--ok);">✓ Done!</strong>
         <div style="font-size:12px;color:#333;margin-top:4px;">Tap <strong>Summary</strong> tab to continue.</div>
       </div>
+      <label style="font-size:12px;font-weight:600;color:var(--navy);margin-top:10px;display:block;">Your skills (tap to edit)</label>
+      ${data.otherSkills.map((s,i)=>`
+        <div class="bullet-row">
+          <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)">
+          <button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>
+        </div>`).join("")}
+      <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill</button>
       ` : ""}
+      <button class="small-link" style="margin-top:12px;display:block;" onclick="setSkillsMode('manual')">Prefer to just type your skills? Switch to manual entry</button>
+      ` : `
+      ${data.otherSkills.map((s,i)=>`
+        <div class="bullet-row">
+          <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="FOR EXAMPLE: customer service, teamwork, hard worker">
+          ${data.otherSkills.length>1 ? `<button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>` : ""}
+        </div>`).join("")}
+      <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill</button>
+      <p class="hint">${lang==='mh' ? 'Kajjojo lain ej erom bullet eo an make – kōmman bwe en pidodo, einwot &quot;good with customers&quot; or &quot;fast learner.&quot;' : 'Each line becomes its own bullet — keep each one simple, like &quot;good with customers&quot; or &quot;fast learner.&quot;'}</p>
+      <button class="small-link" style="margin-top:12px;display:block;" onclick="setSkillsMode('gpt')">Prefer ChatGPT's help instead? Switch</button>
+      `}
     </div>
   `;
 }
@@ -735,22 +745,25 @@ function insertGptSkills(){
   if(otherPhrases.length) data.otherSkills = mergeUnique(data.otherSkills, otherPhrases);
 
   skillsDone = true;
-  skillsGptOpen = false;
+  padSkillsToFive();
   renderForm();
 }
 
-function openSkillsGpt(){
-  skillsGptOpen = true;
+function setSkillsMode(mode){
+  skillsInputMode = mode;
   renderForm();
 }
-function closeSkillsGpt(){
-  skillsGptOpen = false;
-  renderForm();
-}
-function markSkillsDone(){
-  skillsDone = true;
-  skillsGptOpen = false;
-  renderForm();
+
+// A resume skills line reads best with a handful of concrete skills — if the user (or ChatGPT)
+// came up short, round it out with generic professional skills most employers look for.
+const GENERIC_SKILLS = ["Teamwork","Communication","Time management","Reliability","Problem-solving","Adaptability","Work ethic","Customer service","Attention to detail","Dependability"];
+function padSkillsToFive(){
+  const existing = data.otherSkills.map(s=>s.trim()).filter(Boolean);
+  if(!existing.length) return; // nothing entered at all — don't invent skills out of thin air
+  const existingLower = existing.map(s=>s.toLowerCase());
+  const pool = GENERIC_SKILLS.filter(g=>!existingLower.includes(g.toLowerCase()));
+  while(existing.length < 5 && pool.length) existing.push(pool.shift());
+  data.otherSkills = existing;
 }
 
 let doneBulletJobs = new Set(); // job indices where bullets have been generated and done banner shown
@@ -1092,11 +1105,10 @@ function buildResumeHTML(opts){
     const certs = data.certifications.filter(c=>c.trim());
     if(certs.length) skillLines.push(`Certifications: ${certs.join(", ")}.`);
     const others = data.otherSkills.filter(s=>s.trim());
-    others.forEach(s=>{
-      let line = s.trim();
-      if(!/[.!?]$/.test(line)) line += ".";
-      skillLines.push(line);
-    });
+    if(others.length){
+      const formatted = others.map(s=>{ const t = s.trim(); return t.charAt(0).toUpperCase() + t.slice(1); });
+      skillLines.push(formatted.join(" | "));
+    }
     const shownLines = skillsMode === "max3" ? skillLines.slice(0,3) : skillLines;
 
     html += `<div class="rsection"><h3>Skills</h3>`;
