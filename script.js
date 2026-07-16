@@ -292,11 +292,10 @@ function experienceHTML(){
         </label>
         <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px;">
           <strong style="font-size:14px;color:var(--navy);display:block;">Describe what you did</strong>
-          <div class="hint" style="margin-top:2px;margin-bottom:10px;">This turns into the bullet points listed under this job on your resume.</div>
+          <div class="hint" style="margin-top:2px;margin-bottom:10px;">List out what you did here.</div>
         </div>
         ${!e.bulletMode ? `
         <div style="margin-top:6px;">
-          <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:8px;">How do you want to write your bullet points?</label>
           <div style="display:flex;gap:8px;">
             <button class="gold-btn" style="flex:1;" onclick="setBulletMode(${i},'gpt')">Get help from ChatGPT</button>
             <button class="ghost-btn" style="flex:1;margin-top:0;" onclick="setBulletMode(${i},'manual')">I'll write them myself</button>
@@ -487,7 +486,7 @@ function skillsHTML(){
     </div>
     <div style="border-top:1px solid var(--line);margin:14px 0 14px;padding-top:14px;">
       <strong style="font-size:14px;color:var(--navy);display:block;">General skills</strong>
-      <div class="hint" style="margin-top:2px;">Separate from your languages and certifications above — list general skills like teamwork, customer service, or time management. Don't repeat certifications here.</div>
+      <div class="hint" style="margin-top:2px;">List your skills here.</div>
     </div>
     <div class="field" style="margin-top:6px;">
       ${!skillsInputMode ? `
