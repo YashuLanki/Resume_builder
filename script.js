@@ -1426,7 +1426,7 @@ function closeInappWarning(){
   const appName = getInAppBrowserName();
   if(appName){
     const banner = document.getElementById("inapp-banner");
-    banner.innerHTML = `WARNING: Download might not work in ${appName}. We recommend using Safari and Chrome instead. Tap ••• button and select <strong>Open External Browser</strong>.`;
+    banner.innerHTML = `WARNING: Download might not work in ${appName}. We recommend using Safari or Chrome. Tap ••• button and select <strong>Open External Browser</strong>.`;
     banner.style.display = "block";
   }
 }
