@@ -306,9 +306,11 @@ function experienceHTML(){
         <label style="font-size:12px;display:flex;gap:6px;align-items:center;margin-bottom:10px;color:var(--navy);font-weight:600;">
           <input type="checkbox" ${e.current?'checked':''} onchange="toggleCurrent(${i}, this.checked)" style="width:auto;"> I currently work here
         </label>
+        ${e.bulletMode!=="gpt" ? `
         <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px;">
           <strong style="font-size:14px;color:var(--navy);display:block;margin-bottom:10px;">List and describe what you did for Job ${i+1}</strong>
         </div>
+        ` : ""}
         ${!e.bulletMode ? `
         <div style="margin-top:6px;">
           <div style="display:flex;gap:8px;">
@@ -499,9 +501,11 @@ function skillsHTML(){
         </div>`).join("")}
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addCert()">+ Add certification</button>
     </div>
+    ${skillsInputMode!=="gpt" ? `
     <div style="border-top:1px solid var(--line);margin:14px 0 14px;padding-top:14px;">
       <strong style="font-size:14px;color:var(--navy);display:block;">List your general skills here</strong>
     </div>
+    ` : ""}
     <div class="field" style="margin-top:6px;">
       ${!skillsInputMode ? `
       <div style="display:flex;gap:8px;">
