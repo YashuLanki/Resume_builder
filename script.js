@@ -9,8 +9,8 @@ const MH = {
   privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
   gptOpened: "ChatGPT opened in a new tab and your info was copied \u2014 paste it in there, then follow Step 2 below.",
   gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
-  copyStep2Intro: "Step 2: Get ChatGPT's answer",
-  pasteInstructionText: "Paste your info into ChatGPT.",
+  copyStep2Intro: "Step 2: Generate ChatGPT's answer",
+  pasteInstructionText: "Already copied! Just paste in ChatGPT textbox.",
   sendArrowTapText: "↑ Tap the arrow button to generate.",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
@@ -22,8 +22,8 @@ const EN = {
   privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
   gptOpened: "ChatGPT opened in a new tab and your info was copied \u2014 paste it in there, then follow Step 2 below.",
   gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
-  copyStep2Intro: "Step 2: Get ChatGPT's answer",
-  pasteInstructionText: "Paste your info into ChatGPT.",
+  copyStep2Intro: "Step 2: Generate ChatGPT's answer",
+  pasteInstructionText: "Already copied! Just paste in ChatGPT textbox.",
   sendArrowTapText: "↑ Tap the arrow button to generate.",
   copyIconTapText: "⧉ Tap copy icon and come back to this page.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
@@ -362,9 +362,10 @@ function statementHTML(){
       ` : `
         This creates the introduction paragraph at the top of your resume. Here's what to do:
         <div style='margin-top:6px;padding-left:4px;'>
-          <div style='margin-bottom:3px;'>1. Click <strong>Step 1</strong> — ChatGPT opens with your info already typed in. Tap Send there.</div>
-          <div style='margin-bottom:3px;'>2. When ChatGPT answers, tap the copy icon under its reply.</div>
-          <div>3. Come back here, paste it in the box, then click <strong>Step 3</strong>.</div>
+          <div style='margin-bottom:3px;'>1. Click <strong>Step 1</strong>. Opens ChatGPT in a new tab (your info is pre-filled).</div>
+          <div style='margin-bottom:3px;'>2. Paste it into the ChatGPT textbox and tap the arrow to generate.</div>
+          <div style='margin-bottom:3px;'>3. Copy ChatGPT's answer.</div>
+          <div>4. Come back here, paste it in the <strong>Step 3</strong> box, and click <strong>Step 3</strong>.</div>
         </div>
       `}
     </div>
@@ -861,11 +862,11 @@ function copyAnswerIllustrationHTML(){
   const arrowIcon = '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#000;color:#fff;border-radius:50%;font-size:13px;vertical-align:middle;">↑</span>';
   const sendText = esc(mh('sendArrowTapText')).replace('↑', arrowIcon);
   const tapText = esc(mh('copyIconTapText')).replace('⧉', '<span style="font-size:24px;vertical-align:middle;">⧉</span>');
-  return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
-  <div><strong>${esc(mh('copyStep2Intro'))}</strong></div>
-  <div style="margin-bottom:8px;">${esc(mh('pasteInstructionText'))}</div>
-  <div style="margin-bottom:8px;">${sendText}</div>
-  <div>${tapText}</div>
+  return `<div style="margin:28px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.6;">
+  <div style="margin-bottom:8px;"><strong>${esc(mh('copyStep2Intro'))}</strong></div>
+  <div style="margin-bottom:6px;"><strong>A.</strong> ${esc(mh('pasteInstructionText'))}</div>
+  <div style="margin-bottom:6px;"><strong>B.</strong> ${sendText}</div>
+  <div><strong>C.</strong> ${tapText}</div>
 </div></div>`;
 }
 
