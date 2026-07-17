@@ -1432,6 +1432,19 @@ function showDownloadResult(success){
   const modal = document.getElementById("download-result-modal");
   const content = document.getElementById("download-result-content");
 
+  if(isInAppBrowser()){
+    // In-app browsers (Facebook, Instagram, Snapchat, etc.) can silently fail the
+    // download or the new-tab preview without ever raising a JS error we can catch —
+    // so don't claim success or failure here, just tell the user what to check.
+    content.innerHTML = `
+      <p style="margin:0 0 14px;color:#16233D;font-size:15px;font-weight:700;">Check your Downloads or Files app</p>
+      <p style="margin:0 0 12px;color:#16233D;font-size:13px;line-height:1.6;">Your resume should be there. If you don't see it, tap the ••• menu and select <strong>"Open External Browser"</strong>, then try downloading again.</p>
+      <button style="border:none;background:#B68D40;color:#fff;font-size:15px;font-weight:700;padding:12px 0;border-radius:8px;cursor:pointer;width:100%;" onclick="closeDownloadResult()">Got it</button>
+    `;
+    modal.style.display = "flex";
+    return;
+  }
+
   if(success){
     content.innerHTML = `
       <p style="margin:0 0 14px;color:#16233D;font-size:15px;font-weight:700;">Downloaded successfully!</p>
