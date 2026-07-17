@@ -537,7 +537,6 @@ function skillsHTML(){
           ${data.otherSkills.length>1 ? `<button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>` : ""}
         </div>`).join("")}
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill</button>
-      <p class="hint">${lang==='mh' ? 'Kajjojo lain ej erom bullet eo an make – kōmman bwe en pidodo, einwot &quot;good with customers&quot; or &quot;fast learner.&quot;' : 'Each line becomes its own bullet — keep each one simple, like &quot;good with customers&quot; or &quot;fast learner.&quot;'}</p>
       <button class="small-link" style="margin-top:12px;display:block;" onclick="setSkillsMode('gpt')">Prefer ChatGPT's help instead? Switch</button>
       `}
     </div>
