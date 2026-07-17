@@ -866,9 +866,10 @@ function esc(s){
 
 /* ---- Shared: Step 2 illustration showing where ChatGPT's copy icon is ---- */
 function copyAnswerIllustrationHTML(){
+  const tapText = esc(mh('copyIconTapText')).replace('⧉', '<span style="font-size:24px;vertical-align:middle;">⧉</span>');
   return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
   <div><strong>${esc(mh('copyStep2Intro'))}</strong></div>
-  <div>${esc(mh('copyIconTapText'))}</div>
+  <div>${tapText}</div>
 </div></div>`;
 }
 
