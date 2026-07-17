@@ -562,9 +562,15 @@ function openChatGptWithPrompt(prompt, statusElId){
   const url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
   // In in-app browsers, window.open can trigger a page reload that wipes the
   // user's progress — skip it and go straight to the clipboard fallback.
+  // Open blank first and null its opener before navigating: this severs
+  // window.opener (so chatgpt.com/ad scripts there can't redirect this tab)
+  // while still returning a real handle — window.open(url,'_blank','noopener')
+  // always returns null even on success, which would break the check below.
   if(!isInAppBrowser()){
-    const win = window.open(url, '_blank');
+    const win = window.open('', '_blank');
     if(win){
+      win.opener = null;
+      win.location = url;
       if(status) status.textContent = mh('gptOpened');
       return;
     }
