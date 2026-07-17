@@ -9,7 +9,7 @@ const MH = {
   privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
   gptOpened: "ChatGPT opened in a new tab and your info was copied \u2014 paste it in there, then follow Step 2 below.",
   gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
-  copyStep2Intro: "Step 2: Generate ChatGPT's answer",
+  copyAnswerIntroSuffix: "Generate ChatGPT's answer",
   pasteInstructionText: "Emoj an copy! Kajju paste ōt ilo ChatGPT textbox.",
   sendArrowTapText: "↑ Jibidre arrow button e bwe in generate.",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
@@ -22,7 +22,7 @@ const EN = {
   privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
   gptOpened: "ChatGPT opened in a new tab and your info was copied \u2014 paste it in there, then follow Step 2 below.",
   gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
-  copyStep2Intro: "Step 2: Generate ChatGPT's answer",
+  copyAnswerIntroSuffix: "Generate ChatGPT's answer",
   pasteInstructionText: "Already copied! Just paste in ChatGPT textbox.",
   sendArrowTapText: "↑ Tap the arrow button to generate.",
   copyIconTapText: "⧉ Tap copy icon and come back to this page.",
@@ -60,6 +60,7 @@ let data = {
 };
 let currentStep = "personal";
 let skillsInputMode = ""; // "" | "gpt" | "manual" — how the user chose to fill in Other skills
+let statementInputMode = ""; // "" | "gpt" | "manual" — how the user chose to fill in the Professional Summary
 let statementGptOpen = false; // whether the Professional Statement ChatGPT helper panel is open
 let expandedJobs = new Set(); // indices of job cards currently expanded
 let expandedEdus = new Set(); // indices of education cards currently expanded
@@ -316,6 +317,7 @@ function experienceHTML(){
           </div>
         </div>
         ` : e.bulletMode==="gpt" ? `
+        <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: List everything you did for Job ${i+1} here</label>
         <textarea oninput="updExp(${i},'notes',this.value)" placeholder="FOR EXAMPLE: load bags, helped customers, drove forklift...">${esc(e.notes)}</textarea>
         ${gptPanelHTML(i)}
         ${hasBullets ? `
@@ -336,7 +338,7 @@ function experienceHTML(){
         <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;margin-bottom:8px;display:block;">Your bullet points</label>
         ${e.bullets.map((b,bi)=>`
           <div class="bullet-row">
-            <textarea oninput="updBullet(${i},${bi},this.value)" placeholder="FOR EXAMPLE: Loaded and unloaded delivery trucks daily">${esc(b)}</textarea>
+            <textarea rows="1" oninput="updBullet(${i},${bi},this.value)" placeholder="${bulletExamplePlaceholder(bi)}">${esc(b)}</textarea>
             <button class="icon-btn danger" onclick="removeBullet(${i},${bi})" title="Remove bullet">✕</button>
           </div>`).join("")}
         <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addBullet(${i})">+ Add bullet point</button>
@@ -354,26 +356,25 @@ function statementHTML(){
   <div style="margin-bottom:12px;">
     <strong style="font-size:13px;color:var(--navy);">Professional summary</strong>
     <div class="hint" style="margin-top:4px;line-height:1.6;">
-      ${lang==='mh' ? `
-        Section in ej ñan paragraph eo jinoin ilo resume in am. Loor e step kein jilu:<br>
-        1. Jibidre <strong>Step 1</strong> – ChatGPT enaj peliñi ilo tab ekaal kab information ko am emoj an je ilowaan. Jibidre Send ijeno.<br>
-        2. Ñe ChatGPT ej uwaake, jibed copy icon eo iuñin uwaak eo an.<br>
-        3. Rooltok ijin, paste e ilo box ne, innem jibidre <strong>Step 3</strong>.
-      ` : `
-        This creates the introduction paragraph at the top of your resume. Here's what to do:
-        <div style='margin-top:6px;padding-left:4px;'>
-          <div style='margin-bottom:3px;'>1. Click <strong>Step 1</strong>. Opens ChatGPT in a new tab (your info is pre-filled).</div>
-          <div style='margin-bottom:3px;'>2. Paste it into the ChatGPT textbox and tap the arrow to generate.</div>
-          <div style='margin-bottom:3px;'>3. Copy ChatGPT's answer.</div>
-          <div>4. Come back here, paste it in the <strong>Step 3</strong> box, and click <strong>Step 3</strong>.</div>
-        </div>
-      `}
+      ${lang==='mh' ? 'Section in ej ñan paragraph eo jinoin ilo resume in am.' : 'This creates the introduction paragraph at the top of your resume.'}
     </div>
   </div>
   <div class="statement-box">
+    ${!statementInputMode ? `
+    <div style="display:flex;gap:8px;">
+      <button class="gold-btn" style="flex:1;" onclick="setStatementMode('gpt')">Get help from ChatGPT</button>
+      <button class="ghost-btn" style="flex:1;margin-top:0;" onclick="setStatementMode('manual')">I'll write it myself</button>
+    </div>
+    ` : statementInputMode==="gpt" ? `
     ${statementGptPanelHTML()}
+    <button class="small-link" style="margin-top:12px;display:block;" onclick="setStatementMode('manual')">Prefer to write it yourself instead? Switch to manual entry</button>
+    ` : `
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Write your summary</label>
+    <textarea style="min-height:90px;" oninput="onStatementEdit(this.value)" placeholder="FOR EXAMPLE: Reliable warehouse worker with 3+ years of experience in fast-paced environments...">${esc(data.statement)}</textarea>
+    <button class="small-link" style="margin-top:12px;display:block;" onclick="setStatementMode('gpt')">Prefer ChatGPT's help instead? Switch</button>
+    `}
   </div>
-  ${data.statementEdited ? `
+  ${data.statementEdited && statementInputMode==="gpt" ? `
   <div class="field" style="margin-top:16px;">
     <label>Want to tweak it? Edit your summary directly</label>
     <textarea style="min-height:90px;" oninput="onStatementEdit(this.value)">${esc(data.statement)}</textarea>
@@ -508,6 +509,7 @@ function skillsHTML(){
         <button class="ghost-btn" style="flex:1;margin-top:0;" onclick="setSkillsMode('manual')">I'll write them myself</button>
       </div>
       ` : skillsInputMode==="gpt" ? `
+      <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: List all of your skills here</label>
       <textarea oninput="updSkillsNotes(this.value)" placeholder="FOR EXAMPLE: hardworker, teamwork, on-time, etc.">${esc(data.skillsNotes)}</textarea>
       ${skillsGptPanelHTML()}
       ${skillsDone ? `
@@ -527,7 +529,7 @@ function skillsHTML(){
       ` : `
       ${data.otherSkills.map((s,i)=>`
         <div class="bullet-row">
-          <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="FOR EXAMPLE: customer service, teamwork, hard worker">
+          <input type="text" style="flex:1;" value="${esc(s)}" oninput="updSkill(${i},this.value)" placeholder="${skillExamplePlaceholder(i)}">
           ${data.otherSkills.length>1 ? `<button class="icon-btn danger" onclick="removeSkill(${i})">✕</button>` : ""}
         </div>`).join("")}
       <button class="ghost-btn" style="font-weight:700;font-size:13px;" onclick="addSkill()">+ Add skill</button>
@@ -617,14 +619,14 @@ function gptPanelHTML(i){
   const exp = data.experiences[i];
   return `
   <div class="guided-panel" style="margin-top:12px;">
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Open ChatGPT</label>
     <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Open ChatGPT</button>
-    ${copyAnswerIllustrationHTML()}
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
-    <textarea id="gpt-paste-${i}" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('gpt-paste-fb-${i}')"></textarea>
+    ${copyAnswerIllustrationHTML(3)}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 4: Paste ChatGPT's answer here</label>
+    <textarea id="gpt-paste-${i}" style="margin-bottom:4px;" placeholder="${pastePlaceholder(4)}" onpaste="markPasted('gpt-paste-fb-${i}')"></textarea>
     <div class="hint" id="gpt-paste-fb-${i}" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
-    <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 3: Generate my bullet points</button>
+    <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 4: Generate my bullet points</button>
   </div>`;
 }
 function openAndCopyGpt(i){
@@ -652,14 +654,14 @@ function buildSkillsGptPrompt(){
 function skillsGptPanelHTML(){
   return `
   <div class="guided-panel" style="margin-top:12px;">
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 2: Open ChatGPT</label>
     <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
     <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Open ChatGPT</button>
-    ${copyAnswerIllustrationHTML()}
-    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
-    <textarea id="skills-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('skills-gpt-paste-fb')"></textarea>
+    ${copyAnswerIllustrationHTML(3)}
+    <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 4: Paste ChatGPT's answer here</label>
+    <textarea id="skills-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(4)}" onpaste="markPasted('skills-gpt-paste-fb')"></textarea>
     <div class="hint" id="skills-gpt-paste-fb" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
-    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 3: Update my skills</button>
+    <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 4: Update my skills</button>
   </div>`;
 }
 function openAndCopySkillsGpt(){
@@ -840,6 +842,17 @@ function removeExp(i){
 }
 function onStatementEdit(val){ data.statement = val; data.statementEdited = true; renderPreview(); }
 function regenStatement(){ data.statementEdited=false; data.statement=""; renderForm(); }
+function setStatementMode(mode){
+  // Switching away from a hand-written draft to the ChatGPT flow discards it —
+  // confirm first if there's actually something typed to lose.
+  if(mode==="gpt" && statementInputMode==="manual"){
+    if(data.statement.trim() && !confirm("This will erase what you wrote — continue?")) return;
+    data.statement = "";
+    data.statementEdited = false;
+  }
+  statementInputMode = mode;
+  renderForm();
+}
 function refreshStatementBoxOnly(){
   // re-render just the textarea value without losing focus elsewhere isn't trivial in vanilla JS;
   // simplest reliable approach: full re-render of experience step (cursor will reset, which is fine for a short text field interaction pattern here)
@@ -855,18 +868,32 @@ function addSkill(){ data.otherSkills.push(""); renderForm(); }
 function removeSkill(i){ data.otherSkills.splice(i,1); renderForm(); }
 function updSkillsNotes(val){ data.skillsNotes=val; renderPreview(); }
 
+// Rotating example phrases so repeated bullet/skill rows don't all show the identical placeholder.
+const BULLET_EXAMPLES = ["loaded delivery trucks", "helped customers", "cleaned the shop", "operated the register", "stocked shelves", "trained new hires", "answered phones", "organized inventory"];
+function bulletExamplePlaceholder(idx){ return "FOR EXAMPLE: " + BULLET_EXAMPLES[idx % BULLET_EXAMPLES.length]; }
+const SKILL_EXAMPLES = ["hard worker", "team player", "always on time", "good with customers", "fast learner", "reliable", "problem solver", "works well under pressure"];
+function skillExamplePlaceholder(idx){ return "FOR EXAMPLE: " + SKILL_EXAMPLES[idx % SKILL_EXAMPLES.length]; }
+
 function esc(s){
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-/* ---- Shared: Step 2 illustration guiding the user to paste, send, then copy ChatGPT's reply ---- */
-function copyAnswerIllustrationHTML(){
+// Capitalizes the first letter of the text and the first letter after any ". "/"! "/"? " —
+// lets users type bullets/skills in lowercase without it showing that way on the resume.
+function sentenceCase(s){
+  if(!s) return s;
+  return s.replace(/(^\s*[a-z])|([.!?]\s+[a-z])/g, c => c.toUpperCase());
+}
+
+/* ---- Shared: illustration guiding the user to paste, send, then copy ChatGPT's reply ---- */
+function copyAnswerIllustrationHTML(introStep){
+  introStep = introStep || 2;
   const arrowIcon = '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#000;color:#fff;border-radius:50%;font-size:13px;vertical-align:middle;">↑</span>';
   const sendText = esc(mh('sendArrowTapText')).replace('↑', arrowIcon);
   const copyIcon = '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;vertical-align:middle;color:var(--navy);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></span>';
   const tapText = esc(mh('copyIconTapText')).replace('⧉', copyIcon);
   return `<div style="margin:28px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.6;">
-  <div style="margin-bottom:8px;"><strong>${esc(mh('copyStep2Intro'))}</strong></div>
+  <div style="margin-bottom:8px;"><strong>Step ${introStep}: ${esc(mh('copyAnswerIntroSuffix'))}</strong></div>
   <div style="margin-bottom:6px;"><strong>A.</strong> ${esc(mh('pasteInstructionText'))}</div>
   <div style="margin-bottom:6px;"><strong>B.</strong> ${sendText}</div>
   <div><strong>C.</strong> ${tapText}</div>
@@ -1084,7 +1111,7 @@ function buildResumeHTML(opts){
       ? buildStatement(data, 3)
       : (data.statement || buildStatement(data));
     html += `<div class="rsection"><h3>Professional Statement</h3>
-      <div class="rstatement">${statementText ? esc(statementText) : '<span class="empty-note">Add a job in the Experience tab to auto-generate this.</span>'}</div>
+      <div class="rstatement">${statementText ? esc(sentenceCase(statementText)) : '<span class="empty-note">Add a job in the Experience tab to auto-generate this.</span>'}</div>
     </div>`;
   }
 
@@ -1101,7 +1128,7 @@ function buildResumeHTML(opts){
         <div class="rjob-top"><span>${esc(e.title)||"Job Title"}</span><span>${esc(dates)}</span></div>
         <div class="rjob-sub"><span>${esc(e.company)||""}${e.company && cityState ? " – ":""}${esc(cityState)}</span><span></span></div>
         <ul class="rbullets">
-          ${e.bullets.filter(b=>b.trim()).map(b=>`<li>${esc(b)}</li>`).join("") || ""}
+          ${e.bullets.filter(b=>b.trim()).map(b=>`<li>${esc(sentenceCase(b.trim()))}</li>`).join("") || ""}
         </ul>
       </div>`;
     });
@@ -1133,7 +1160,7 @@ function buildResumeHTML(opts){
     if(certs.length) skillLines.push(`Certifications: ${certs.join(", ")}.`);
     const others = data.otherSkills.filter(s=>s.trim());
     if(others.length){
-      const formatted = others.map(s=>{ const t = s.trim().replace(/[.!?;]+$/,""); return t.charAt(0).toUpperCase() + t.slice(1); });
+      const formatted = others.map(s=>{ const t = s.trim().replace(/[.!?;]+$/,""); return sentenceCase(t); });
       skillLines.push(formatted.join(" | "));
     }
     const shownLines = skillsMode === "max3" ? skillLines.slice(0,3) : skillLines;
@@ -1541,6 +1568,7 @@ function saveState(){
     data: data,
     currentStep: currentStep,
     skillsInputMode: skillsInputMode,
+    statementInputMode: statementInputMode,
     skillsDone: skillsDone,
     statementGptOpen: statementGptOpen,
     lang: lang,
@@ -1563,8 +1591,10 @@ function restoreState(){
   try {
     const state = JSON.parse(saved);
     data = state.data;
-    currentStep = state.currentStep;
+    // currentStep is intentionally NOT restored — always land on Personal Info first,
+    // even though the underlying data survives a reload.
     skillsInputMode = state.skillsInputMode;
+    statementInputMode = state.statementInputMode;
     skillsDone = state.skillsDone;
     statementGptOpen = state.statementGptOpen;
     lang = state.lang;
