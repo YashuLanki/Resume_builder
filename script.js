@@ -11,7 +11,7 @@ const MH = {
   gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
   copyAnswerIntroSuffix: "Generate ChatGPT's answer",
   pasteInstructionText: "Emoj an copy! Kajju paste ōt ilo ChatGPT textbox.",
-  sendArrowTapText: "↑ Jibidre arrow button e bwe in generate.",
+  sendArrowTapText: "↑ Jibidre arrow button bwe in generate.",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
