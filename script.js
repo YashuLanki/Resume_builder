@@ -10,8 +10,8 @@ const MH = {
   gptOpened: "ChatGPT opened in a new tab and your info was copied \u2014 paste it in there, then follow Step 2 below.",
   gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
   copyStep2Intro: "Step 2: Generate ChatGPT's answer",
-  pasteInstructionText: "Already copied! Just paste in ChatGPT textbox.",
-  sendArrowTapText: "↑ Tap the arrow button to generate.",
+  pasteInstructionText: "Emoj an copy! Kajju paste ōt ilo ChatGPT textbox.",
+  sendArrowTapText: "↑ Jibidre arrow button e bwe in generate.",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
@@ -30,7 +30,7 @@ const EN = {
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
 function pastePlaceholder(step){
-  if(lang==='mh') return 'Paste eo an ChatGPT ijin, innem jibidre button eo Step ' + step;
+  if(lang==='mh') return 'Paste ChatGPT answer ijin, innem jibidre Step ' + step + '.';
   return `Paste ChatGPT's answer here, then click the Step ${step} button below`;
 }
 
