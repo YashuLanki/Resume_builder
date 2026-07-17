@@ -1307,6 +1307,7 @@ async function downloadPDF(){
     showDownloadResult(true);
     try{
       pdf.save(filename);
+      window.open(blobUrl, '_blank');
       trackDownload(true, timeSpent, currentStep);
       clearSavedState();
     } catch(downloadErr){
