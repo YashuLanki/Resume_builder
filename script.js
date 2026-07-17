@@ -1571,11 +1571,10 @@ renderForm();
 setMobileView("form");
 showInappWarning(); // warn if in in-app browser
 
-// Prevent page unload when ads try to redirect (e.g., ChatGPT ads on mobile)
-// Also protect for 10 seconds after link clicks or button interactions that might trigger unload
+// Prevent page unload when ads try to redirect (e.g., ChatGPT ads on mobile).
+// preventUnloadUntil is set elsewhere, right after pasting ChatGPT output, so
+// this only blocks unload within that window — not on every navigation.
 window.addEventListener('beforeunload', (e) => {
-  // Set protection for 10 seconds on unload attempt
-  preventUnloadUntil = Math.max(preventUnloadUntil, Date.now() + 10000);
   if (Date.now() < preventUnloadUntil) {
     e.preventDefault();
     e.returnValue = '';
