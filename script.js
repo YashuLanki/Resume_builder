@@ -55,7 +55,8 @@ let data = {
   education:[ newEdu() ],
   languages:[""],
   certifications:[""],
-  otherSkills:["",""]
+  otherSkills:["",""],
+  skillsNotes:""
 };
 let currentStep = "personal";
 let skillsInputMode = ""; // "" | "gpt" | "manual" — how the user chose to fill in Other skills
@@ -315,7 +316,6 @@ function experienceHTML(){
           </div>
         </div>
         ` : e.bulletMode==="gpt" ? `
-        <label style="font-size:14px;font-weight:700;color:var(--navy);margin-top:4px;display:block;">First, list what you did at this job</label>
         <textarea oninput="updExp(${i},'notes',this.value)" placeholder="FOR EXAMPLE: load bags, helped customers, drove forklift...">${esc(e.notes)}</textarea>
         ${gptPanelHTML(i)}
         ${hasBullets ? `
@@ -508,6 +508,7 @@ function skillsHTML(){
         <button class="ghost-btn" style="flex:1;margin-top:0;" onclick="setSkillsMode('manual')">I'll write them myself</button>
       </div>
       ` : skillsInputMode==="gpt" ? `
+      <textarea oninput="updSkillsNotes(this.value)" placeholder="FOR EXAMPLE: hardworker, teamwork, on-time, etc.">${esc(data.skillsNotes)}</textarea>
       ${skillsGptPanelHTML()}
       ${skillsDone ? `
       <div style="margin-top:14px;padding:12px;background:#E1EFE5;border-radius:8px;">
@@ -635,7 +636,7 @@ function buildSkillsGptPrompt(){
   const langs = (data.languages||[]).filter(l=>l.trim());
   const langStr = langs.join(", ");
   const certs = data.certifications.filter(c=>c.trim()).join(", ");
-  const others = data.otherSkills.filter(s=>s.trim()).join(", ");
+  const others = (data.skillsNotes||"").trim();
   let p = "Rewrite the following as a professional resume skills section. ";
   p += "Reply using exactly this structure and nothing else:\n\n";
   p += "Languages: <comma-separated languages, or None>\n";
@@ -852,6 +853,7 @@ function removeCert(i){ data.certifications.splice(i,1); renderForm(); }
 function updSkill(i,val){ data.otherSkills[i]=val; renderPreview(); }
 function addSkill(){ data.otherSkills.push(""); renderForm(); }
 function removeSkill(i){ data.otherSkills.splice(i,1); renderForm(); }
+function updSkillsNotes(val){ data.skillsNotes=val; renderPreview(); }
 
 function esc(s){
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
