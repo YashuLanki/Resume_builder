@@ -1298,27 +1298,20 @@ async function downloadPDF(){
     const filename = (data.name.trim().replace(/\s+/g,"_") || "resume") + "_Resume.pdf";
 
     const blobUrl = URL.createObjectURL(pdf.output('blob'));
-    const inApp = isInAppBrowser();
 
     const timeSpent = Math.round((Date.now() - appStartTime) / 1000);
     const currentStep = document.querySelector('.step-btn.active')?.getAttribute('data-step') || 'unknown';
 
-    if(inApp){
-      // In in-app browser: show failure modal
-      showDownloadResult(false);
+    // Attempt the download the same way regardless of in-app vs external browser —
+    // some in-app browsers do let it through, so don't preemptively give up on them.
+    showDownloadResult(true);
+    try{
+      pdf.save(filename);
+      trackDownload(true, timeSpent, currentStep);
+      clearSavedState();
+    } catch(downloadErr){
+      console.error("Automatic download failed:", downloadErr);
       trackDownload(false, timeSpent, currentStep);
-    } else {
-      // In external browser: show success modal
-      showDownloadResult(true);
-      // Attempt automatic download
-      try{
-        pdf.save(filename);
-        trackDownload(true, timeSpent, currentStep);
-        clearSavedState();
-      } catch(downloadErr){
-        console.error("Automatic download failed:", downloadErr);
-        trackDownload(false, timeSpent, currentStep);
-      }
     }
 
   } catch(err){
