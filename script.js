@@ -8,7 +8,11 @@ const MH = {
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
-  copyStep2Intro: "Step 2: Copy ChatGPT",
+  gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
+  gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
+  gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  copyStep2Intro: "Step 2: Get ChatGPT's answer",
+  sendArrowTapText: "↑ ← Tap the arrow to send this to ChatGPT",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
@@ -18,8 +22,12 @@ const EN = {
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
-  copyStep2Intro: "Step 2: Copy ChatGPT",
-  copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
+  gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
+  gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
+  gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  copyStep2Intro: "Step 2: Get ChatGPT's answer",
+  sendArrowTapText: "↑ ← Tap the arrow to send this to ChatGPT",
+  copyIconTapText: "⧉ ← Once ChatGPT replies, tap this icon to copy it, then come back to this page",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
@@ -552,18 +560,27 @@ function removeBullet(i,bi){ data.experiences[i].bullets.splice(bi,1); renderFor
 function addBullet(i){ data.experiences[i].bullets.push(""); renderForm(); }
 function setBulletMode(i,mode){ data.experiences[i].bulletMode = mode; renderForm(); }
 
-/* ---- Shared: fires when the "Open ChatGPT" link is tapped. The actual
-   navigation is handled by that <a target="_blank" rel="noopener noreferrer">
-   href, not JS — a real link click uses the browser's own native new-tab
-   handling instead of window.open(), which is what let some mobile browsers
-   (iOS Safari especially) discard/reload the original tab's in-memory form
-   data while the new tab was open. We just copy the prompt to the clipboard
-   as a backup, in case chatgpt.com's ?q= prefill doesn't take, and update
-   the status text. ---- */
-function openChatGptLinkClicked(prompt, statusElId){
-  copyTextToClipboard(prompt, ()=>{}, ()=>{});
+/* ---- Shared: open ChatGPT with the prompt pre-filled (clipboard fallback) ----
+   iOS Safari can discard/reload this tab in the background regardless of how
+   the ChatGPT tab is opened (window.open, a real <a target="_blank">, opener
+   severed or not — all tried, none of it changed the behavior), so this stays
+   the plain, simple version rather than carrying extra complexity for no
+   benefit. Step 2's instructions guide the user through sending and copying
+   manually instead of trying to prevent the reload from happening. ---- */
+function openChatGptWithPrompt(prompt, statusElId){
   const status = document.getElementById(statusElId);
-  if(status) status.textContent = mh('gptOpened');
+  const url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
+  const win = window.open(url, '_blank');
+  if(win){
+    if(status) status.textContent = mh('gptOpened');
+    return;
+  }
+  // Popup blocked — fall back to copying the prompt so the user can paste it in manually.
+  const inApp = isInAppBrowser();
+  copyTextToClipboard(prompt,
+    ()=>{ if(status) status.textContent = mh(inApp ? 'gptCopiedInApp' : 'gptCopiedFallback'); },
+    ()=>{ if(status) status.textContent = mh('gptCopyFailed'); }
+  );
 }
 function copyTextToClipboard(text, onOk, onFail){
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -605,12 +622,11 @@ function buildGptPrompt(exp){
 }
 function gptPanelHTML(i){
   const exp = data.experiences[i];
-  const gptUrl = 'https://chatgpt.com/?q=' + encodeURIComponent(buildGptPrompt(exp));
   return `
   <div class="guided-panel" style="margin-top:12px;">
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="gpt-status-${i}" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
-    <a class="gold-btn" style="width:100%;" href="${esc(gptUrl)}" target="_blank" rel="noopener noreferrer" onclick="openAndCopyGpt(${i})">Open ChatGPT</a>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Open ChatGPT</button>
     ${copyAnswerIllustrationHTML()}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
     <textarea id="gpt-paste-${i}" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('gpt-paste-fb-${i}')"></textarea>
@@ -619,7 +635,7 @@ function gptPanelHTML(i){
   </div>`;
 }
 function openAndCopyGpt(i){
-  openChatGptLinkClicked(buildGptPrompt(data.experiences[i]), `gpt-status-${i}`);
+  openChatGptWithPrompt(buildGptPrompt(data.experiences[i]), `gpt-status-${i}`);
 }
 
 /* ---- Skills writing help: free ChatGPT link ---- */
@@ -641,12 +657,11 @@ function buildSkillsGptPrompt(){
   return p;
 }
 function skillsGptPanelHTML(){
-  const gptUrl = 'https://chatgpt.com/?q=' + encodeURIComponent(buildSkillsGptPrompt());
   return `
   <div class="guided-panel" style="margin-top:12px;">
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="skills-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
-    <a class="gold-btn" style="width:100%;" href="${esc(gptUrl)}" target="_blank" rel="noopener noreferrer" onclick="openAndCopySkillsGpt()">Open ChatGPT</a>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Open ChatGPT</button>
     ${copyAnswerIllustrationHTML()}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
     <textarea id="skills-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('skills-gpt-paste-fb')"></textarea>
@@ -655,7 +670,7 @@ function skillsGptPanelHTML(){
   </div>`;
 }
 function openAndCopySkillsGpt(){
-  openChatGptLinkClicked(buildSkillsGptPrompt(), "skills-gpt-status");
+  openChatGptWithPrompt(buildSkillsGptPrompt(), "skills-gpt-status");
 }
 
 
@@ -850,11 +865,13 @@ function esc(s){
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-/* ---- Shared: Step 2 illustration showing where ChatGPT's copy icon is ---- */
+/* ---- Shared: Step 2 illustration guiding the user to send, then copy ChatGPT's reply ---- */
 function copyAnswerIllustrationHTML(){
+  const sendText = esc(mh('sendArrowTapText')).replace('↑', '<span style="font-size:24px;vertical-align:middle;">↑</span>');
   const tapText = esc(mh('copyIconTapText')).replace('⧉', '<span style="font-size:24px;vertical-align:middle;">⧉</span>');
   return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
   <div><strong>${esc(mh('copyStep2Intro'))}</strong></div>
+  <div style="margin-bottom:8px;">${sendText}</div>
   <div>${tapText}</div>
 </div></div>`;
 }
@@ -933,12 +950,11 @@ function buildStatementGptPrompt(d){
   return p;
 }
 function statementGptPanelHTML(){
-  const gptUrl = 'https://chatgpt.com/?q=' + encodeURIComponent(buildStatementGptPrompt(data));
   return `
   <div class="guided-panel">
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-top:6px;margin-bottom:8px;">Step 1: Open ChatGPT</label>
     <div class="hint" id="statement-gpt-status" style="margin-top:8px;margin-bottom:8px;font-size:12.5px;"></div>
-    <a class="gold-btn" style="width:100%;" href="${esc(gptUrl)}" target="_blank" rel="noopener noreferrer" onclick="openAndCopyStatementGpt()">Open ChatGPT</a>
+    <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Open ChatGPT</button>
     ${copyAnswerIllustrationHTML()}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
     <textarea id="statement-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('statement-gpt-paste-fb')"></textarea>
@@ -953,7 +969,7 @@ function statementGptPanelHTML(){
   </div>`;
 }
 function openAndCopyStatementGpt(){
-  openChatGptLinkClicked(buildStatementGptPrompt(data), "statement-gpt-status");
+  openChatGptWithPrompt(buildStatementGptPrompt(data), "statement-gpt-status");
 }
 function insertGptStatement(){
   preventUnloadUntil = Date.now() + 10000; // prevent unload for 10 seconds
