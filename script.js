@@ -1600,10 +1600,10 @@ function restoreState(){
   try {
     const state = JSON.parse(saved);
     data = state.data;
-    // currentStep is intentionally NOT restored — always land on Personal Info first,
-    // even though the underlying data survives a reload.
-    skillsInputMode = state.skillsInputMode;
-    statementInputMode = state.statementInputMode;
+    // currentStep, per-job bulletMode, skillsInputMode, and statementInputMode are
+    // intentionally NOT restored — every visit always shows the "ChatGPT or write it
+    // yourself" choice fresh, even though the underlying typed-in data survives a reload.
+    (data.experiences||[]).forEach(e=>{ e.bulletMode = ""; });
     skillsDone = state.skillsDone;
     statementGptOpen = state.statementGptOpen;
     lang = state.lang;
