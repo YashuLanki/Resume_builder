@@ -9,6 +9,7 @@ const MH = {
   privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
+  gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
   copyStep2Intro: "Step 2: Copy ChatGPT",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
@@ -21,6 +22,7 @@ const EN = {
   privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
   gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
   gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
+  gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
   copyStep2Intro: "Step 2: Copy ChatGPT",
   copyIconTapText: "⧉ ← Tap this icon to copy and come back to this page",
@@ -566,7 +568,8 @@ function openChatGptWithPrompt(prompt, statusElId){
   // window.opener (so chatgpt.com/ad scripts there can't redirect this tab)
   // while still returning a real handle — window.open(url,'_blank','noopener')
   // always returns null even on success, which would break the check below.
-  if(!isInAppBrowser()){
+  const inApp = isInAppBrowser();
+  if(!inApp){
     const win = window.open('', '_blank');
     if(win){
       win.opener = null;
@@ -575,9 +578,12 @@ function openChatGptWithPrompt(prompt, statusElId){
       return;
     }
   }
-  // Popup blocked (common in in-app browsers) — fall back to copying the prompt.
+  // In-app browsers intentionally skip window.open above, so this isn't an
+  // unexpected block — use a calm "copied" message instead of the "your
+  // browser blocked the popup" wording, which only applies when an actual
+  // external browser's popup blocker denied the request.
   copyTextToClipboard(prompt,
-    ()=>{ if(status) status.textContent = mh('gptCopiedFallback'); },
+    ()=>{ if(status) status.textContent = mh(inApp ? 'gptCopiedInApp' : 'gptCopiedFallback'); },
     ()=>{ if(status) status.textContent = mh('gptCopyFailed'); }
   );
 }
@@ -1287,6 +1293,7 @@ async function downloadPDF(){
       try{
         pdf.save(filename);
         trackDownload(true, timeSpent, currentStep);
+        clearSavedState();
       } catch(downloadErr){
         console.error("Automatic download failed:", downloadErr);
         trackDownload(false, timeSpent, currentStep);
@@ -1547,11 +1554,17 @@ function saveState(){
     doneBulletJobs: Array.from(doneBulletJobs),
     expandedEdus: Array.from(expandedEdus)
   };
-  sessionStorage.setItem('resumeBuilderState', JSON.stringify(state));
+  // localStorage, not sessionStorage: iOS in-app browsers can drop
+  // sessionStorage across the tab reloads this is meant to survive.
+  localStorage.setItem('resumeBuilderState', JSON.stringify(state));
+}
+
+function clearSavedState(){
+  localStorage.removeItem('resumeBuilderState');
 }
 
 function restoreState(){
-  const saved = sessionStorage.getItem('resumeBuilderState');
+  const saved = localStorage.getItem('resumeBuilderState');
   if(!saved) return;
   try {
     const state = JSON.parse(saved);
