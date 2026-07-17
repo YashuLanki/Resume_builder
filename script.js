@@ -12,7 +12,7 @@ const MH = {
   gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
   copyStep2Intro: "Step 2: Get ChatGPT's answer",
-  sendArrowTapText: "↑ ← Tap the arrow to send this to ChatGPT",
+  sendArrowTapText: "↑ Tap the arrow button to generate.",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
@@ -26,8 +26,8 @@ const EN = {
   gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
   gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
   copyStep2Intro: "Step 2: Get ChatGPT's answer",
-  sendArrowTapText: "↑ ← Tap the arrow to send this to ChatGPT",
-  copyIconTapText: "⧉ ← Once ChatGPT replies, tap this icon to copy it, then come back to this page",
+  sendArrowTapText: "↑ Tap the arrow button to generate.",
+  copyIconTapText: "⧉ Tap copy icon and come back to this page.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
 };
 function mh(key){ return lang === 'mh' ? MH[key] : EN[key]; }
@@ -867,7 +867,8 @@ function esc(s){
 
 /* ---- Shared: Step 2 illustration guiding the user to send, then copy ChatGPT's reply ---- */
 function copyAnswerIllustrationHTML(){
-  const sendText = esc(mh('sendArrowTapText')).replace('↑', '<span style="font-size:24px;vertical-align:middle;">↑</span>');
+  const arrowIcon = '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#000;color:#fff;border-radius:50%;font-size:13px;vertical-align:middle;">↑</span>';
+  const sendText = esc(mh('sendArrowTapText')).replace('↑', arrowIcon);
   const tapText = esc(mh('copyIconTapText')).replace('⧉', '<span style="font-size:24px;vertical-align:middle;">⧉</span>');
   return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
   <div><strong>${esc(mh('copyStep2Intro'))}</strong></div>
