@@ -7,11 +7,10 @@ const MH = {
   expHint: "Likit jerbal ko ilo jabdew\u014dt laajrak - resume eo am enaj makke kwalok jerbal eo ekaal mokta ekkar ñan iio.",
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Melele kein am rej walok \u014dt ilo browser in.",
-  gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
-  gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
-  gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
-  gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  gptOpened: "ChatGPT opened in a new tab and your info was copied \u2014 paste it in there, then follow Step 2 below.",
+  gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
   copyStep2Intro: "Step 2: Get ChatGPT's answer",
+  pasteInstructionText: "Paste your info into the message box (already copied for you).",
   sendArrowTapText: "↑ Tap the arrow button to generate.",
   copyIconTapText: "⧉ ← Jibidre icon e im rol tok ñan peij in.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
@@ -21,11 +20,10 @@ const EN = {
   expHint: "Add up to 3 jobs in any order. Your resume will automatically list the most recent first.",
   iosSaveTitle: "Your resume is ready!",
   privacyNote: "Disclaimer: Your information is never saved, stored, or sent anywhere \u2014 everything stays in your browser and is only used to build this resume.",
-  gptOpened: "ChatGPT opened in a new tab with your info already typed in \u2014 just tap Send there, then come back here.",
-  gptCopiedFallback: "Your browser blocked the popup, so we copied your info instead \u2014 open chatgpt.com yourself and paste it into the message box.",
-  gptCopiedInApp: "Copied! Open chatgpt.com, paste this in, then come back here and paste ChatGPT's reply.",
-  gptCopyFailed: "Couldn't open ChatGPT or copy automatically. Open chatgpt.com yourself, then come back and try the button again.",
+  gptOpened: "ChatGPT opened in a new tab and your info was copied \u2014 paste it in there, then follow Step 2 below.",
+  gptCopiedFallback: "Your browser blocked the popup, but we copied your info \u2014 open chatgpt.com yourself, paste it in, then follow Step 2 below.",
   copyStep2Intro: "Step 2: Get ChatGPT's answer",
+  pasteInstructionText: "Paste your info into the message box (already copied for you).",
   sendArrowTapText: "↑ Tap the arrow button to generate.",
   copyIconTapText: "⧉ Tap copy icon and come back to this page.",
   pasteGotIt: "Got it ✓ — now tap the Step 3 button below.",
@@ -560,27 +558,20 @@ function removeBullet(i,bi){ data.experiences[i].bullets.splice(bi,1); renderFor
 function addBullet(i){ data.experiences[i].bullets.push(""); renderForm(); }
 function setBulletMode(i,mode){ data.experiences[i].bulletMode = mode; renderForm(); }
 
-/* ---- Shared: open ChatGPT with the prompt pre-filled (clipboard fallback) ----
-   iOS Safari can discard/reload this tab in the background regardless of how
-   the ChatGPT tab is opened (window.open, a real <a target="_blank">, opener
-   severed or not — all tried, none of it changed the behavior), so this stays
-   the plain, simple version rather than carrying extra complexity for no
-   benefit. Step 2's instructions guide the user through sending and copying
-   manually instead of trying to prevent the reload from happening. ---- */
+/* ---- Shared: open ChatGPT and copy the prompt to the clipboard for the user
+   to paste in themselves. chatgpt.com's ?q= URL parameter auto-submits the
+   message immediately instead of just pre-filling it — there's no way to
+   land the text in the box without it also generating right away — so we
+   don't use it at all. Opening plain chatgpt.com and having the user paste
+   manually is the only way to guarantee they control when it sends. ---- */
 function openChatGptWithPrompt(prompt, statusElId){
   const status = document.getElementById(statusElId);
-  const url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
-  const win = window.open(url, '_blank');
-  if(win){
-    if(status) status.textContent = mh('gptOpened');
-    return;
-  }
-  // Popup blocked — fall back to copying the prompt so the user can paste it in manually.
-  const inApp = isInAppBrowser();
-  copyTextToClipboard(prompt,
-    ()=>{ if(status) status.textContent = mh(inApp ? 'gptCopiedInApp' : 'gptCopiedFallback'); },
-    ()=>{ if(status) status.textContent = mh('gptCopyFailed'); }
-  );
+  // Copy before opening the new tab: once window.open shifts focus away,
+  // the clipboard write can silently lose the user-gesture activation it
+  // needs and never resolve.
+  copyTextToClipboard(prompt, ()=>{}, ()=>{});
+  const win = window.open('https://chatgpt.com/', '_blank');
+  if(status) status.textContent = mh(win ? 'gptOpened' : 'gptCopiedFallback');
 }
 function copyTextToClipboard(text, onOk, onFail){
   if(navigator.clipboard && navigator.clipboard.writeText){
@@ -865,13 +856,14 @@ function esc(s){
   return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
 
-/* ---- Shared: Step 2 illustration guiding the user to send, then copy ChatGPT's reply ---- */
+/* ---- Shared: Step 2 illustration guiding the user to paste, send, then copy ChatGPT's reply ---- */
 function copyAnswerIllustrationHTML(){
   const arrowIcon = '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#000;color:#fff;border-radius:50%;font-size:13px;vertical-align:middle;">↑</span>';
   const sendText = esc(mh('sendArrowTapText')).replace('↑', arrowIcon);
   const tapText = esc(mh('copyIconTapText')).replace('⧉', '<span style="font-size:24px;vertical-align:middle;">⧉</span>');
   return `<div style="margin:18px 0;"><div style="font-size:13px;color:var(--navy);line-height:1.5;">
   <div><strong>${esc(mh('copyStep2Intro'))}</strong></div>
+  <div style="margin-bottom:8px;">${esc(mh('pasteInstructionText'))}</div>
   <div style="margin-bottom:8px;">${sendText}</div>
   <div>${tapText}</div>
 </div></div>`;
