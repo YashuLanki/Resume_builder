@@ -562,26 +562,27 @@ function setBulletMode(i,mode){ data.experiences[i].bulletMode = mode; renderFor
 function openChatGptWithPrompt(prompt, statusElId){
   const status = document.getElementById(statusElId);
   const url = 'https://chatgpt.com/?q=' + encodeURIComponent(prompt);
-  // In in-app browsers, window.open can trigger a page reload that wipes the
-  // user's progress — skip it and go straight to the clipboard fallback.
+  // Try opening ChatGPT the same way for every browser, including in-app
+  // browsers — form data now persists via localStorage (see saveState),
+  // which survives the same-tab navigation some in-app browsers do in
+  // place of a real new tab, so we no longer need to special-case them.
   // Open blank first and null its opener before navigating: this severs
   // window.opener (so chatgpt.com/ad scripts there can't redirect this tab)
   // while still returning a real handle — window.open(url,'_blank','noopener')
   // always returns null even on success, which would break the check below.
-  const inApp = isInAppBrowser();
-  if(!inApp){
-    const win = window.open('', '_blank');
-    if(win){
-      win.opener = null;
-      win.location = url;
-      if(status) status.textContent = mh('gptOpened');
-      return;
-    }
+  const win = window.open('', '_blank');
+  if(win){
+    win.opener = null;
+    win.location = url;
+    if(status) status.textContent = mh('gptOpened');
+    return;
   }
-  // In-app browsers intentionally skip window.open above, so this isn't an
-  // unexpected block — use a calm "copied" message instead of the "your
-  // browser blocked the popup" wording, which only applies when an actual
-  // external browser's popup blocker denied the request.
+  // Popup blocked or unsupported — fall back to copying the prompt. In-app
+  // browsers land here too when they block window.open outright; use the
+  // calm "copied" message for them instead of the "your browser blocked
+  // the popup" wording, which should only describe a genuine external-
+  // browser popup block.
+  const inApp = isInAppBrowser();
   copyTextToClipboard(prompt,
     ()=>{ if(status) status.textContent = mh(inApp ? 'gptCopiedInApp' : 'gptCopiedFallback'); },
     ()=>{ if(status) status.textContent = mh('gptCopyFailed'); }
