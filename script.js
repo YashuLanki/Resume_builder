@@ -682,11 +682,16 @@ function openAndCopySkillsGpt(){
    isn't real text our line-by-line parsing below can split on, so decode it first. ---- */
 function decodeIfUrlEncoded(text){
   if(!text || !/%[0-9A-Fa-f]{2}/.test(text)) return text;
+  // A genuine "%" in the answer itself (e.g. "100% dependable") that isn't part of a
+  // real %XX escape makes decodeURIComponent throw for the ENTIRE string, abandoning
+  // decoding altogether — so escape those stray percent signs first (turning them into
+  // the valid escape for a literal "%") before attempting to decode the rest.
+  const safe = text.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
   try{
-    const decoded = decodeURIComponent(text);
+    const decoded = decodeURIComponent(safe);
     return decoded !== text ? decoded : text;
   } catch(e){
-    return text; // not actually percent-encoding (e.g. a lone "%") — leave as typed
+    return text; // still malformed even after escaping stray percents — leave as typed
   }
 }
 
@@ -1661,12 +1666,14 @@ function restoreState(){
     // The ChatGPT-assisted results (job bullet points, Skills' languages/certifications/
     // other-skills, and the Summary) are intentionally reset here too, not just their
     // mode buttons — so a stuck or bad round-trip (e.g. a garbled paste) can never
-    // persist across visits. Everything the user typed directly (job title/company/
-    // dates/notes, skills notes, education, personal info) still survives a reload.
-    (data.experiences||[]).forEach(e=>{ e.bulletMode = ""; e.bullets = [""]; });
+    // persist across visits. The Step 1 "what did you do" / "list your skills" notes
+    // that feed the ChatGPT prompt reset along with them, so that step always starts
+    // blank too. Only job title/company/dates, education, and personal info survive.
+    (data.experiences||[]).forEach(e=>{ e.bulletMode = ""; e.bullets = [""]; e.notes = ""; });
     data.languages = [""];
     data.certifications = [""];
     data.otherSkills = ["",""];
+    data.skillsNotes = "";
     data.statement = "";
     data.statementEdited = false;
     skillsDone = false;
