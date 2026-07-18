@@ -577,7 +577,11 @@ function openChatGptWithPrompt(prompt, statusElId){
   // the clipboard write can silently lose the user-gesture activation it
   // needs and never resolve.
   copyTextToClipboard(prompt, ()=>{}, ()=>{});
-  const win = window.open('https://chatgpt.com/', '_blank');
+  // 'noopener' cuts the new tab's window.opener link back to us. Without it, chatgpt.com
+  // knows it was opened from another tab — some ad/tracking scripts specifically reload
+  // pages that have an opener like this, which matches the "answer shows, then the whole
+  // ChatGPT tab refreshes a few seconds later" symptom.
+  const win = window.open('https://chatgpt.com/', '_blank', 'noopener,noreferrer');
   if(status) status.textContent = mh(win ? 'gptOpened' : 'gptCopiedFallback');
 }
 function copyTextToClipboard(text, onOk, onFail){
@@ -672,6 +676,20 @@ function openAndCopySkillsGpt(){
 }
 
 
+/* ---- Some mobile share/copy paths (seen from in-app browsers) hand back ChatGPT's
+   answer percent-encoded, e.g. "Other skills:%20Strong%20work%20ethic" instead of
+   "Other skills: Strong work ethic", with %0A standing in for real line breaks. That
+   isn't real text our line-by-line parsing below can split on, so decode it first. ---- */
+function decodeIfUrlEncoded(text){
+  if(!text || !/%[0-9A-Fa-f]{2}/.test(text)) return text;
+  try{
+    const decoded = decodeURIComponent(text);
+    return decoded !== text ? decoded : text;
+  } catch(e){
+    return text; // not actually percent-encoding (e.g. a lone "%") — leave as typed
+  }
+}
+
 /* ---- Strip markdown formatting ChatGPT sometimes adds (bold/italic/code) ---- */
 function stripMarkdownLine(line){
   return line
@@ -716,7 +734,7 @@ function cleanCertPhrase(v){
 function insertGptSkills(){
   preventUnloadUntil = Date.now() + 10000; // prevent unload for 10 seconds
   const ta = document.getElementById("skills-gpt-paste");
-  const raw = ta ? ta.value : "";
+  const raw = decodeIfUrlEncoded(ta ? ta.value : "");
   if(!raw.trim()){
     alert("Paste ChatGPT's answer into the box first, then click this button.");
     return;
@@ -731,6 +749,10 @@ function insertGptSkills(){
     const lMatch = line.match(/^\s*(languages?|bilingual\w*)\s*:\s*(.+)$/i);
     const cMatch = line.match(/^\s*certifications?\s*:\s*(.+)$/i);
     const headerMatch = line.match(/^\s*other skills?\s*:?\s*$/i);
+    // ChatGPT sometimes puts the skills right after "Other skills:" on the same line
+    // instead of the header-then-bullet format the prompt asked for — catch that too,
+    // so "Other skills:" doesn't get stuck onto the front of the first skill.
+    const otherInlineMatch = line.match(/^\s*other skills?\s*:\s*(.+)$/i);
     if(lMatch){
       const v = lMatch[2].trim();
       if(v && !/^none$/i.test(v)) langVals = v.split(",").map(s=>cleanBilingualPhrase(s.trim())).filter(Boolean);
@@ -742,6 +764,10 @@ function insertGptSkills(){
       return;
     }
     if(headerMatch) return;
+    if(otherInlineMatch){
+      leftoverLines.push(otherInlineMatch[1].trim());
+      return;
+    }
     leftoverLines.push(line);
   });
 
@@ -813,7 +839,7 @@ function toggleJobCard(i){
 function insertGptBullets(i){
   preventUnloadUntil = Date.now() + 10000; // prevent unload for 10 seconds
   const ta = document.getElementById(`gpt-paste-${i}`);
-  const lines = splitGptLines(ta ? ta.value : "");
+  const lines = splitGptLines(decodeIfUrlEncoded(ta ? ta.value : ""));
   if(!lines.length){
     alert("Paste ChatGPT's bullets into the box first, then click this button.");
     return;
@@ -1001,7 +1027,7 @@ function openAndCopyStatementGpt(){
 function insertGptStatement(){
   preventUnloadUntil = Date.now() + 10000; // prevent unload for 10 seconds
   const ta = document.getElementById("statement-gpt-paste");
-  const raw = ta ? ta.value : "";
+  const raw = decodeIfUrlEncoded(ta ? ta.value : "");
   if(!raw.trim()){
     alert("Paste ChatGPT's statement into the box first, then click this button.");
     return;
@@ -1312,7 +1338,11 @@ async function downloadPDF(){
       pdf.save(filename);
       window.open(blobUrl, '_blank');
       trackDownload(true, timeSpent, currentStep);
-      clearSavedState();
+      // In-app browsers can silently fail this download without throwing (see
+      // showDownloadResult above), so we can't trust pdf.save() not throwing as
+      // proof it worked there. Only wipe the saved form data once we're in a
+      // real browser, where a thrown error is the only way this can fail.
+      if(!isInAppBrowser()) clearSavedState();
     } catch(downloadErr){
       console.error("Automatic download failed:", downloadErr);
       trackDownload(false, timeSpent, currentStep);
@@ -1357,11 +1387,28 @@ function getInAppBrowserName(){
   // TikTok
   if(/TikTok/i.test(ua)) return "TikTok";
 
+  // WeChat — check before the plain Messenger check below, since "MicroMessenger"
+  // (WeChat's own UA marker) contains the substring "Messenger" and would otherwise
+  // be misidentified as Facebook Messenger.
+  if(/MicroMessenger/i.test(ua)) return "WeChat";
+
   // Messenger
   if(/Messenger/i.test(ua)) return "Messenger";
 
   // Google Search App
   if(/GSA/i.test(ua)) return "Google Search App";
+
+  // LinkedIn
+  if(/LinkedInApp/i.test(ua)) return "LinkedIn";
+
+  // LINE messenger
+  if(/\bLine\//i.test(ua)) return "LINE";
+
+  // Twitter / X
+  if(/Twitter/i.test(ua)) return "Twitter";
+
+  // Pinterest
+  if(/Pinterest/i.test(ua)) return "Pinterest";
 
   // Fallback: iPhone/iPad without Safari/ identifier is likely an in-app browser
   // Real Safari includes "Safari/" in the UA, but in-app browsers often strip it
@@ -1371,6 +1418,13 @@ function getInAppBrowserName(){
       return "In-App Browser";
     }
   }
+
+  // Generic Android WebView fallback: Android stamps "; wv)" into the UA
+  // specifically for WebView-based in-app browsers (the mechanism many apps use,
+  // including Gmail and LinkedIn on Android, without adding their own brand marker).
+  // This won't catch apps that use Chrome Custom Tabs instead of a raw WebView —
+  // those are indistinguishable from real Chrome and don't have this problem anyway.
+  if(/Android/i.test(ua) && /;\s?wv\)/i.test(ua)) return "In-App Browser";
 
   return null;
 }
@@ -1602,13 +1656,23 @@ function restoreState(){
     data = state.data;
     // currentStep, per-job bulletMode, skillsInputMode, statementInputMode, and lang
     // are intentionally NOT restored — every visit always starts fresh (English,
-    // Personal Info tab, choice buttons showing), even though the underlying
-    // typed-in data survives a reload.
-    (data.experiences||[]).forEach(e=>{ e.bulletMode = ""; });
-    skillsDone = state.skillsDone;
-    statementGptOpen = state.statementGptOpen;
+    // Personal Info tab, choice buttons showing).
+    //
+    // The ChatGPT-assisted results (job bullet points, Skills' languages/certifications/
+    // other-skills, and the Summary) are intentionally reset here too, not just their
+    // mode buttons — so a stuck or bad round-trip (e.g. a garbled paste) can never
+    // persist across visits. Everything the user typed directly (job title/company/
+    // dates/notes, skills notes, education, personal info) still survives a reload.
+    (data.experiences||[]).forEach(e=>{ e.bulletMode = ""; e.bullets = [""]; });
+    data.languages = [""];
+    data.certifications = [""];
+    data.otherSkills = ["",""];
+    data.statement = "";
+    data.statementEdited = false;
+    skillsDone = false;
+    statementGptOpen = false;
     expandedJobs = new Set(state.expandedJobs);
-    doneBulletJobs = new Set(state.doneBulletJobs);
+    doneBulletJobs = new Set();
     expandedEdus = new Set(state.expandedEdus);
   } catch(e) {}
 }
