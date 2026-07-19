@@ -602,8 +602,16 @@ function legacyCopy(text, onOk, onFail){
   try{ document.execCommand('copy'); onOk(); }catch(e){ onFail(); }
   document.body.removeChild(ta);
 }
-function markPasted(feedbackId){
+function markPasted(ta, feedbackId){
   setTimeout(()=>{
+    // Clean up a percent-encoded paste (%20/%0A/etc.) right in the box, so it never
+    // shows confusing garbled text — even briefly — while waiting for the user to tap
+    // Generate. The 50ms delay (same as below) lets the browser finish the paste first;
+    // reading ta.value any earlier would still see the pre-paste content.
+    if(ta){
+      const decoded = decodeIfUrlEncoded(ta.value);
+      if(decoded !== ta.value) ta.value = decoded;
+    }
     const el = document.getElementById(feedbackId);
     if(el) el.textContent = mh('pasteGotIt');
   }, 50);
@@ -631,7 +639,7 @@ function gptPanelHTML(i){
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyGpt(${i})">Open ChatGPT</button>
     ${copyAnswerIllustrationHTML(3)}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 4: Paste ChatGPT's answer here</label>
-    <textarea id="gpt-paste-${i}" style="margin-bottom:4px;" placeholder="${pastePlaceholder(4)}" onpaste="markPasted('gpt-paste-fb-${i}')"></textarea>
+    <textarea id="gpt-paste-${i}" style="margin-bottom:4px;" placeholder="${pastePlaceholder(4)}" onpaste="markPasted(this,'gpt-paste-fb-${i}')"></textarea>
     <div class="hint" id="gpt-paste-fb-${i}" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
     <button class="gold-btn" style="width:100%;" onclick="insertGptBullets(${i})">Step 4: Generate my bullet points</button>
   </div>`;
@@ -666,7 +674,7 @@ function skillsGptPanelHTML(){
     <button class="gold-btn" style="width:100%;" onclick="openAndCopySkillsGpt()">Open ChatGPT</button>
     ${copyAnswerIllustrationHTML(3)}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 4: Paste ChatGPT's answer here</label>
-    <textarea id="skills-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(4)}" onpaste="markPasted('skills-gpt-paste-fb')"></textarea>
+    <textarea id="skills-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(4)}" onpaste="markPasted(this,'skills-gpt-paste-fb')"></textarea>
     <div class="hint" id="skills-gpt-paste-fb" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
     <button class="gold-btn" style="width:100%;" onclick="insertGptSkills()">Step 4: Update my skills</button>
   </div>`;
@@ -1015,7 +1023,7 @@ function statementGptPanelHTML(){
     <button class="gold-btn" style="width:100%;" onclick="openAndCopyStatementGpt()">Open ChatGPT</button>
     ${copyAnswerIllustrationHTML()}
     <label style="font-size:14px;font-weight:700;color:var(--navy);display:block;margin-bottom:6px;">Step 3: Paste ChatGPT's answer here</label>
-    <textarea id="statement-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted('statement-gpt-paste-fb')"></textarea>
+    <textarea id="statement-gpt-paste" style="margin-bottom:4px;" placeholder="${pastePlaceholder(3)}" onpaste="markPasted(this,'statement-gpt-paste-fb')"></textarea>
     <div class="hint" id="statement-gpt-paste-fb" style="margin-bottom:10px;color:var(--ok);font-weight:600;"></div>
     <button class="gold-btn" style="width:100%;margin-top:6px;" onclick="insertGptStatement()">Step 3: Update my summary</button>
     ${data.statementEdited ? `
