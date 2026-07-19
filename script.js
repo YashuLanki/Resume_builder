@@ -679,20 +679,20 @@ function openAndCopySkillsGpt(){
 /* ---- Some mobile share/copy paths (seen from in-app browsers) hand back ChatGPT's
    answer percent-encoded, e.g. "Other skills:%20Strong%20work%20ethic" instead of
    "Other skills: Strong work ethic", with %0A standing in for real line breaks. That
-   isn't real text our line-by-line parsing below can split on, so decode it first. ---- */
+   isn't real text our line-by-line parsing below can split on, so decode it first.
+   We only decode a fixed whitelist of common punctuation/whitespace codes, one at a
+   time, rather than running the whole answer through decodeURIComponent — a genuine
+   "%" in the answer itself (e.g. "100% dependable", or even a coincidental "%ab" where
+   ab happen to be hex-looking letters) would make a whole-string decodeURIComponent
+   throw and abandon decoding everything else in the answer along with it. ---- */
+const PERCENT_ESCAPES = {
+  "%20":" ", "%0a":"\n", "%0d":"", "%3a":":", "%2c":",", "%7c":"|", "%3b":";",
+  "%22":"\"", "%27":"'", "%25":"%", "%2f":"/", "%26":"&", "%23":"#", "%24":"$",
+  "%40":"@", "%3d":"=", "%3f":"?", "%21":"!"
+};
 function decodeIfUrlEncoded(text){
-  if(!text || !/%[0-9A-Fa-f]{2}/.test(text)) return text;
-  // A genuine "%" in the answer itself (e.g. "100% dependable") that isn't part of a
-  // real %XX escape makes decodeURIComponent throw for the ENTIRE string, abandoning
-  // decoding altogether — so escape those stray percent signs first (turning them into
-  // the valid escape for a literal "%") before attempting to decode the rest.
-  const safe = text.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
-  try{
-    const decoded = decodeURIComponent(safe);
-    return decoded !== text ? decoded : text;
-  } catch(e){
-    return text; // still malformed even after escaping stray percents — leave as typed
-  }
+  if(!text) return text;
+  return text.replace(/%(?:20|0a|0d|3a|2c|7c|3b|22|27|25|2f|26|23|24|40|3d|3f|21)/gi, m => PERCENT_ESCAPES[m.toLowerCase()]);
 }
 
 /* ---- Strip markdown formatting ChatGPT sometimes adds (bold/italic/code) ---- */
