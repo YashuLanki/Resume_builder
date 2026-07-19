@@ -196,6 +196,63 @@ function updateStepChecks(){
   });
 }
 
+/* ---------------- START OVER ---------------- */
+function hasAnyData(){
+  if(data.name.trim() || data.city.trim() || data.state.trim() || data.email.trim() || data.phone.trim()) return true;
+  if(data.statement.trim()) return true;
+  if(data.experiences.some(e => e.title.trim() || e.company.trim() || e.notes.trim() || e.bullets.some(b=>b.trim())
+    || e.city.trim() || e.state.trim() || e.startMonth || e.startYear || e.endMonth || e.endYear)) return true;
+  if(data.education.some(ed => ed.school.trim() || ed.program.trim() || ed.degreeType.trim() || ed.detail.trim()
+    || ed.city.trim() || ed.state.trim() || ed.startYear || ed.gradYear)) return true;
+  if(data.languages.some(l=>l.trim())) return true;
+  if(data.certifications.some(c=>c.trim())) return true;
+  if(data.otherSkills.some(s=>s.trim())) return true;
+  if(data.skillsNotes.trim()) return true;
+  return false;
+}
+function updateStartOverVisibility(){
+  const btn = document.getElementById("start-over-btn");
+  if(btn) btn.style.display = hasAnyData() ? "" : "none";
+}
+function openStartOverModal(){
+  document.getElementById("start-over-modal").style.display = "flex";
+}
+function closeStartOverModal(){
+  document.getElementById("start-over-modal").style.display = "none";
+  document.getElementById("start-over-confirm-modal").style.display = "none";
+}
+function proceedToStartOverConfirm(){
+  document.getElementById("start-over-modal").style.display = "none";
+  document.getElementById("start-over-confirm-modal").style.display = "flex";
+}
+function doStartOver(){
+  localStorage.removeItem('resumeBuilderState');
+  data = {
+    name:"", city:"", state:"", email:"", phone:"",
+    statement:"", statementEdited:false,
+    experiences:[ newExp() ],
+    education:[ newEdu() ],
+    languages:[""],
+    certifications:[""],
+    otherSkills:["",""],
+    skillsNotes:""
+  };
+  currentStep = "personal";
+  skillsInputMode = "";
+  statementInputMode = "";
+  statementGptOpen = false;
+  skillsDone = false;
+  expandedJobs = new Set([0]);
+  doneBulletJobs = new Set();
+  expandedEdus = new Set();
+  document.querySelectorAll(".step-btn").forEach(b=>{
+    b.classList.toggle("active", b.dataset.step==="personal");
+  });
+  closeStartOverModal();
+  renderForm();
+  setMobileView("form");
+}
+
 /* ---------------- NAV ---------------- */
 function goStep(step){
   if(currentStep==="skills" && step!=="skills") padSkillsToFive();
@@ -1249,6 +1306,7 @@ function renderPreview(){
   checkFit(chosen);
   fitPageWrap();
   updateStepChecks();
+  updateStartOverVisibility();
 }
 
 function getCurrentScale(el){

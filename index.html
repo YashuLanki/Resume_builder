@@ -26,7 +26,10 @@
         <h1>Build your resume</h1>
         <p id="brandbar-hint">Complete each tab in order. Your info will be turned into a one-page resume. Download your PDF in the final tab.</p>
       </div>
-      <button id="lang-toggle" onclick="toggleLang()">🇲🇭 Translate to Marshallese</button>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+        <button id="lang-toggle" onclick="toggleLang()">🇲🇭 Translate to Marshallese</button>
+        <button id="start-over-btn" onclick="openStartOverModal()" style="display:none;border:1.5px solid #8A2E1E;background:#fff;color:#8A2E1E;font-size:12px;font-weight:700;padding:6px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;">Start Over</button>
+      </div>
     </div>
     <div class="steps">
       <button class="step-btn active" data-step="personal" onclick="goStep('personal')"><span class="num">1</span>Personal Info</button>
@@ -88,7 +91,31 @@
   </div>
 </div>
 
-<script src="script.js?v=35"></script>
+<!-- Start Over: first confirmation -->
+<div id="start-over-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:14px;max-width:320px;width:100%;padding:24px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <p style="margin:0 0 8px;color:var(--navy);font-size:16px;font-weight:700;">Start over?</p>
+    <p style="margin:0 0 20px;color:#3a3a3a;font-size:14px;line-height:1.6;">This will erase everything you've entered — your info, experience, skills, and summary — and take you back to a blank form.</p>
+    <div style="display:flex;gap:10px;">
+      <button style="flex:1;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-size:14px;font-weight:700;padding:11px 0;border-radius:8px;cursor:pointer;" onclick="closeStartOverModal()">Cancel</button>
+      <button style="flex:1;border:none;background:#8A2E1E;color:#fff;font-size:14px;font-weight:700;padding:11px 0;border-radius:8px;cursor:pointer;" onclick="proceedToStartOverConfirm()">Yes, Start Over</button>
+    </div>
+  </div>
+</div>
+
+<!-- Start Over: final confirmation -->
+<div id="start-over-confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#fff;border-radius:14px;max-width:320px;width:100%;padding:24px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.3);">
+    <p style="margin:0 0 8px;color:#8A2E1E;font-size:16px;font-weight:700;">Are you sure?</p>
+    <p style="margin:0 0 20px;color:#3a3a3a;font-size:14px;line-height:1.6;">This can't be undone. Once you start over, everything is gone for good.</p>
+    <div style="display:flex;gap:10px;">
+      <button style="flex:1;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-size:14px;font-weight:700;padding:11px 0;border-radius:8px;cursor:pointer;" onclick="closeStartOverModal()">No, Go Back</button>
+      <button style="flex:1;border:none;background:#8A2E1E;color:#fff;font-size:14px;font-weight:700;padding:11px 0;border-radius:8px;cursor:pointer;" onclick="doStartOver()">Yes, Erase Everything</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js?v=36"></script>
 
 </body>
 </html>
